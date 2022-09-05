@@ -54,10 +54,23 @@ def CornerDetection():
 	gray = cv2.cvtColor(img1,cv2.COLOR_BGR2GRAY)
 	cv2.imwrite("gray.png", gray)
 	gray = np.float32(gray)
-	Nstrong = cv2.cornerHarris(gray, 2,3,0.04)
 
 
-	cv2.imwrite("corner.png", Nstrong)
+
+
+
+	Nstrong =cv2.goodFeaturesToTrack(gray,1000,0.000000001,10)
+	corners = np.int0(Nstrong)
+	print("CORNERS")
+	print(corners)
+	for i in corners:
+	    x,y = i.ravel()
+	    cv2.circle(img1,(x,y),3,255,-1)
+
+
+
+	#cv2.imwrite("Harris.png", img1)
+	cv2.imwrite("goodFeaturesToTrack.png", img1)
 
 CornerDetection()
 
