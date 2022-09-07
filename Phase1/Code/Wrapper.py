@@ -156,7 +156,8 @@ def CornerDetection():
 
 	cv2.imwrite("Nbest.png", img1)
 
-CornerDetection()
+#CornerDetection()
+
 
 """
 Perform ANMS: Adaptive Non-Maximal Suppression
@@ -209,6 +210,38 @@ Save Feature Descriptor output as FD.png
 Feature Matching
 Save Feature Matching output as matching.png
 """
+
+#input image 1 point and sum of all image 2 points ("are they talking about features?")
+def FeatureMatching():
+	img1 = cv2.imread('../Data/Train/Set1/1.jpg')
+	img2 = cv2.imread('../Data/Train/Set1/2.jpg')
+
+	# Initiate ORB detector
+	orb = cv2.ORB_create()
+
+	kp1, des1 = orb.detectAndCompute(img1,None)
+	kp2, des2 = orb.detectAndCompute(img2,None)
+	
+
+	# create BFMatcher object
+	bf = cv2.BFMatcher(cv2.NORM_HAMMING, crossCheck=True)
+
+	# Match descriptors.
+	matches = bf.match(des1,des2)
+
+
+	# Sort them in the order of their distance.
+	matches = sorted(matches, key = lambda x:x.distance)
+
+
+	# Draw first 10 matches.
+	img3 = cv2.drawMatches(img1,kp1,img2,kp2,matches[:10],None,flags=cv2.DrawMatchesFlags_NOT_DRAW_SINGLE_POINTS)
+
+	cv2.imwrite("Matches.png", img3)
+
+FeatureMatching()
+
+
 
 """
 Refine: RANSAC, Estimate Homography
