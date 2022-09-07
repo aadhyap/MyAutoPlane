@@ -67,7 +67,6 @@ def ANMS(cornerScoreImage):
 
 
 
-
 	for n in range(len(strong)):
 		x = strong[n][0]
 		y = strong[n][1]
@@ -81,17 +80,16 @@ def ANMS(cornerScoreImage):
 				compare_score = strong[m][2]
 
 				if(score > compare_score):
-						distance = ((x - i) ** 2) + ((y-j)**2)
+					distance = ((x - i) ** 2) + ((y-j)**2)
 
-				if(distance < radius):
-					radius = distance
+					if(distance < radius):
+						radius = distance
 		coor = [x,y,radius]
 		all_r.append(coor)
 
 
 	print("ALL THE RADIUSES ")
 	
-
 
 
 	'''for x in range(size):
@@ -139,11 +137,6 @@ def CornerDetection():
 	#result is dilated for marking the corners, not important
 	dst = cv2.dilate(dst,None)
 
-
-	print("MAX ")
-	print(dst>0.01*dst.max())
-
-
 	best = ANMS(dst)
 
 
@@ -151,7 +144,6 @@ def CornerDetection():
 	print("PUUTTING ON IMAGE ", len(best))
 	for point in best:
 		
-
 		x = point[0]
 		y = point[1]
 		r = point[2]
@@ -159,16 +151,10 @@ def CornerDetection():
 		
 		img1[x][y] = [0,0,255] 
 		for j in best:
-			if ( (((x - j[0])**2) + ((y - j[1]) **2) ) < r):
+			if ((((x - j[0])**2) + ((y - j[1]) **2) ) < r):
 				best.remove(j)
 
-
-
-
-
-	
-
-	cv2.imwrite("Nstrong.png", img1)
+	cv2.imwrite("Nbest.png", img1)
 
 CornerDetection()
 
@@ -185,25 +171,6 @@ Save ANMS output as anms.png
 #Then it needs to score of the Nstrong coordinate
 
 #Then feed it to the the thing 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
