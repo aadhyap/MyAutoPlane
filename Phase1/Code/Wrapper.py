@@ -38,6 +38,118 @@ def main():
 	"""
 
 
+def ANMS(cornerScoreImage):
+	print("CALLED ANMS")
+
+	print("THIS IS ALL THE OG SCORES")
+	print(cornerScoreImage)
+
+	radius = np.inf 
+	distance = np.inf
+	size = len(cornerScoreImage)
+	all_r = []
+
+	strong = []
+	for i in range(size):
+		for j in range(size):
+
+			#peak local max
+			if(cornerScoreImage[i][j] > 0.01*cornerScoreImage.max()): #set everything lower than threshold to 0
+			
+
+
+				corner = [i, j, cornerScoreImage[i][j]]
+				strong.append(corner)
+			else:
+				cornerScoreImage[i][j] = -np.inf
+	print("ALL THE STRONGS ", len(strong))
+	print(strong)
+
+
+
+
+	for n in range(len(strong)):
+		x = strong[n][0]
+		y = strong[n][1]
+		score = strong[n][2]
+
+		for m in range(len(strong)):
+
+			if(m != n):
+				i = strong[m][0]
+				j = strong[m][1]
+				compare_score = strong[m][2]
+
+				if(score > compare_score):
+						distance = ((x - i) ** 2) + ((y-j)**2)
+
+				if(distance < radius):
+					radius = distance
+		coor = [x,y,radius]
+		all_r.append(coor)
+
+
+	print("ALL THE RADIUSES ")
+	
+
+
+
+	'''for x in range(size):
+		for y in range(size):
+			if(cornerScoreImage[x][y] != 0):
+
+				#the next N strong corner
+
+						
+				for i in range(size):
+					for j in range(size):
+
+						if(cornerScoreImage[i][j] != 0 and cornerScoreImage[x][y] > cornerScoreImage[i][j] and (x != i and y != j)):
+							distance = ((x - i) ** 2) + ((y-j)**2)
+
+						if(distance < radius):
+							radius = distance
+
+
+				coor = [x,y,radius]
+				all_r.append(coor)'''
+
+
+	all_r.sort(key=lambda x:x[2])
+	print(all_r)
+
+
+	'''
+	for r in range(60):
+
+		x = all_r[r][0]
+		y = all_r[r][1]
+		r = all_r[r][2]
+
+
+
+		
+		#Now remove all the other coordinates
+		for i in range(len(cornerScoreImage)):
+			for j in range(len(cornerScoreImage)):
+
+				if(cornerScoreImage[i][j] != -np.inf):
+
+					distance = ((x - i) ** 2) + ((y-j)**2)
+
+				if(distance < r):
+					#cornerScoreImage[i][j] = -np.inf
+					r= distance
+
+					'''
+
+
+
+	print("N BEST ")
+	print(cornerScoreImage)
+	return all_r
+
+
 
 def CornerDetection():
 	img1 = cv2.imread('../Data/Train/Set1/1.jpg')
@@ -87,18 +199,49 @@ def CornerDetection():
 	'''for i in range(len(dst)):
 		for j in range(len(dst)):
 	'''
-	img1[dst>0.01*dst.max()]=[0,0,255] #prints True or False values if it's above 0.01 than 1% percent more confidence than the highest confidence
+	#img1[dst>0.01*dst.max()]=[0,0,255] #prints True or False values if it's above 0.01 than 1% percent more confidence than the highest confidence
+
+
+	
 
 	print("THRESHOLD APPLIED")
 	print(img1)
 
 	print("MAX ")
 	print(dst>0.01*dst.max())
-	
-	cv2.imshow('dst',img1)
-	cv2.waitKey(5000)
 
-	cv2.imwrite("corner.png", img1)
+
+	print("ITERATING THROUGH IMAGE")
+	for i in range(len(img1)):
+		for j in range(len(img1)):
+			print(img1[i][j])
+
+
+	best = ANMS(dst)
+
+
+
+	print("PUUTTING ON IMAGE ", len(best))
+	for point in best:
+		
+
+		x = point[0]
+		y = point[1]
+		r = point[2]
+
+		
+		img1[x][y] = [0,0,255] 
+		for j in best:
+			if ( (((x - j[0])**2) + ((y - j[1]) **2) ) < r):
+				best.remove(j)
+
+
+
+
+
+	
+
+	cv2.imwrite("Nstrong.png", img1)
 
 CornerDetection()
 
@@ -115,38 +258,54 @@ Save ANMS output as anms.png
 #Then it needs to score of the Nstrong coordinate
 
 #Then feed it to the the thing 
-def ANMS(cornerScoreImage):
-
-	radius = np.inf 
-	distance = np.inf
-	size = len(cornerScoreImage)
-	for i in range(size):
-		for j in range(size):
-			#peak local max
-			if(cornerScoreImage[i][j] < 0.01*cornerScoreImage.max()): #set everything lower than threshold to 0
-				cornerScoreImage[i][j] = 0 
 
 
-				for x in range(size):
-					for y in range(size):
-						if(cornerScoreImage[x][y] != 0):
-							#the next N strong corner
 
-						
-							for i in range(size):
-								for j in range(size):
-									if(cornerScoreImage[i][j] != 0 and cornerScoreImage[x][y] > cornerScoreImage[i][j]):
-										distance = ((x - i) ** 2) + ((y-j)**2)
 
-									if(distance < radius):
-										r = distance
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+										#every 5th row and 42nd  
+										#gaussian blur after 
+
+			
 
 			#add episolon 
 			#down sample to get more points the two points are not as close
+			#blending do same intentsity
+
+			#sprt r in descending order
+			#panaroma stiching find the homography matrix
+			#take inverse than the homography then apply i(original image, inverse pertreb it, then inverse of that thing, take the normal )
 
 
+#superglue magic leap read the paper
+#take patch of image, w and h
+#take the inveerse and width and height
+#take a white square in the middle of a black square at the end you should have a white square
+#cv2.warpperspective, don't use it bacause it's not differentiable instead use cornea
+#Take the average of the supervised, use supervised P(a) which is the patch and P(b) has to be similirarity (P(a) - P(b)) <-- loss unsupervised
+#use that loss to backpropogate, use cornea. 
+#spatial transform network (STN)
 
 
+#Tesla uses pure math
 """
 Feature Descriptors
 Save Feature Descriptor output as FD.png
