@@ -119,32 +119,6 @@ def ANMS(cornerScoreImage):
 	print(all_r)
 
 
-	'''
-	for r in range(60):
-
-		x = all_r[r][0]
-		y = all_r[r][1]
-		r = all_r[r][2]
-
-
-
-		
-		#Now remove all the other coordinates
-		for i in range(len(cornerScoreImage)):
-			for j in range(len(cornerScoreImage)):
-
-				if(cornerScoreImage[i][j] != -np.inf):
-
-					distance = ((x - i) ** 2) + ((y-j)**2)
-
-				if(distance < r):
-					#cornerScoreImage[i][j] = -np.inf
-					r= distance
-
-					'''
-
-
-
 	print("N BEST ")
 	print(cornerScoreImage)
 	return all_r
@@ -159,62 +133,15 @@ def CornerDetection():
 
 	gray = cv2.cvtColor(img1,cv2.COLOR_BGR2GRAY)
 
-
-
-
-
-
-
-	'''Nstrong =cv2.goodFeaturesToTrack(gray,1000,0.000000001,10)
-	corners = np.int0(Nstrong)
-	print("CORNERS")
-	print(corners)
-	for i in corners:
-	    x,y = i.ravel()
-	    cv2.circle(img1,(x,y),3,255,-1)'''
-
-
-
-
-
 	gray = np.float32(gray)
-	print("length of image ", len(gray))
-
-	print("IMAGE ")
-	print("IMAGE 1")
 	dst = cv2.cornerHarris(gray,2,3,0.04)
-	print("length of corner harris ", len(dst))
-
-
-	print("CORNER HARRIS")
-	print(dst)
+	
 	#result is dilated for marking the corners, not important
 	dst = cv2.dilate(dst,None)
-	print("length of dilation ", len(dst))
-	print("DILATED ")
-	print(dst)
-	# Threshold for an optimal value, it may vary depending on the image.
-	corners = [] 
 
-	'''for i in range(len(dst)):
-		for j in range(len(dst)):
-	'''
-	#img1[dst>0.01*dst.max()]=[0,0,255] #prints True or False values if it's above 0.01 than 1% percent more confidence than the highest confidence
-
-
-	
-
-	print("THRESHOLD APPLIED")
-	print(img1)
 
 	print("MAX ")
 	print(dst>0.01*dst.max())
-
-
-	print("ITERATING THROUGH IMAGE")
-	for i in range(len(img1)):
-		for j in range(len(img1)):
-			print(img1[i][j])
 
 
 	best = ANMS(dst)
