@@ -55,9 +55,6 @@ def ANMS(cornerScoreImage):
 
 			#peak local max
 			if(cornerScoreImage[i][j] > 0.01*cornerScoreImage.max()): #set everything lower than threshold to 0
-			
-
-
 				corner = [i, j, cornerScoreImage[i][j]]
 				strong.append(corner)
 			else:
@@ -66,13 +63,14 @@ def ANMS(cornerScoreImage):
 	print(strong)
 
 
-
+	radius = [np.inf] * len(strong)
 	for n in range(len(strong)):
 		x = strong[n][0]
 		y = strong[n][1]
 		score = strong[n][2]
 
 		for m in range(len(strong)):
+
 
 			if(m != n):
 				i = strong[m][0]
@@ -81,16 +79,12 @@ def ANMS(cornerScoreImage):
 
 				if(score > compare_score):
 					distance = ((x - i) ** 2) + ((y-j)**2)
-
-					if(distance < radius):
-						radius = distance
-		coor = [x,y,radius]
+				if(distance < radius[n]):
+					radius[n] = distance
+		coor = [x,y,radius[n]]
 		all_r.append(coor)
-
-
 	print("ALL THE RADIUSES ")
-	
-
+	print(all_r)
 
 	'''for x in range(size):
 		for y in range(size):
@@ -113,13 +107,11 @@ def ANMS(cornerScoreImage):
 				all_r.append(coor)'''
 
 
-	all_r.sort(key=lambda x:x[2])
-	print(all_r)
+	all_r.sort(key=lambda x:x[2], reverse=True)
 
 
-	print("N BEST ")
-	print(cornerScoreImage)
-	return all_r
+
+	return (all_r[:100])
 
 
 
@@ -130,33 +122,33 @@ def CornerDetection():
 
 
 	gray = cv2.cvtColor(img1,cv2.COLOR_BGR2GRAY)
-
 	gray = np.float32(gray)
+	
 	dst = cv2.cornerHarris(gray,2,3,0.04)
 	
 	#result is dilated for marking the corners, not important
 	dst = cv2.dilate(dst,None)
 
 	best = ANMS(dst)
-
-
-
-	print("PUUTTING ON IMAGE ", len(best))
-	for point in best:
+	print("BEST")
+	print(best)
+	for point in range(len(best)):
 		
-		x = point[0]
-		y = point[1]
-		r = point[2]
+		x = best[point][0]
+		y = best[point][1]
+		r = best[point][2]
+	
+
+
 
 		
 		img1[x][y] = [0,0,255] 
-		for j in best:
-			if ((((x - j[0])**2) + ((y - j[1]) **2) ) < r):
-				best.remove(j)
+	
+
 
 	cv2.imwrite("Nbest.png", img1)
 
-#CornerDetection()
+CornerDetection()
 
 
 """
@@ -212,7 +204,7 @@ Save Feature Matching output as matching.png
 """
 
 #input image 1 point and sum of all image 2 points ("are they talking about features?")
-def FeatureMatching():
+def FeatureMatching(kp1, kp2):
 	img1 = cv2.imread('../Data/Train/Set1/1.jpg')
 	img2 = cv2.imread('../Data/Train/Set1/2.jpg')
 
@@ -239,7 +231,16 @@ def FeatureMatching():
 
 	cv2.imwrite("Matches.png", img3)
 
-FeatureMatching()
+
+def match(kp1, kp2):
+	matches = []
+
+	#for point in kp1:
+
+
+
+
+#FeatureMatching()
 
 
 
