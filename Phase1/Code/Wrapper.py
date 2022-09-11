@@ -41,9 +41,6 @@ def main():
 def ANMS(cornerScoreImage):
 	print("CALLED ANMS")
 
-	print("THIS IS ALL THE OG SCORES")
-	print(cornerScoreImage)
-
 	radius = np.inf 
 	distance = np.inf
 	size = len(cornerScoreImage)
@@ -52,15 +49,12 @@ def ANMS(cornerScoreImage):
 	strong = []
 	for i in range(size):
 		for j in range(size):
-
 			#peak local max
 			if(cornerScoreImage[i][j] > 0.01*cornerScoreImage.max()): #set everything lower than threshold to 0
 				corner = [i, j, cornerScoreImage[i][j]]
 				strong.append(corner)
 			else:
 				cornerScoreImage[i][j] = -np.inf
-	print("ALL THE STRONGS ", len(strong))
-	print(strong)
 
 
 	radius = [np.inf] * len(strong)
@@ -70,7 +64,6 @@ def ANMS(cornerScoreImage):
 		score = strong[n][2]
 
 		for m in range(len(strong)):
-
 
 			if(m != n):
 				i = strong[m][0]
@@ -83,28 +76,6 @@ def ANMS(cornerScoreImage):
 					radius[n] = distance
 		coor = [x,y,radius[n]]
 		all_r.append(coor)
-	print("ALL THE RADIUSES ")
-	print(all_r)
-
-	'''for x in range(size):
-		for y in range(size):
-			if(cornerScoreImage[x][y] != 0):
-
-				#the next N strong corner
-
-						
-				for i in range(size):
-					for j in range(size):
-
-						if(cornerScoreImage[i][j] != 0 and cornerScoreImage[x][y] > cornerScoreImage[i][j] and (x != i and y != j)):
-							distance = ((x - i) ** 2) + ((y-j)**2)
-
-						if(distance < radius):
-							radius = distance
-
-
-				coor = [x,y,radius]
-				all_r.append(coor)'''
 
 
 	all_r.sort(key=lambda x:x[2], reverse=True)
@@ -130,18 +101,12 @@ def CornerDetection():
 	dst = cv2.dilate(dst,None)
 
 	best = ANMS(dst)
-	print("BEST")
-	print(best)
 	for point in range(len(best)):
 		
 		x = best[point][0]
 		y = best[point][1]
 		r = best[point][2]
-	
 
-
-
-		
 		img1[x][y] = [0,0,255] 
 	
 
@@ -208,6 +173,9 @@ def FeatureMatching(kp1, kp2):
 	img1 = cv2.imread('../Data/Train/Set1/1.jpg')
 	img2 = cv2.imread('../Data/Train/Set1/2.jpg')
 
+
+	#each keypoint (64 by 1 vector)
+
 	# Initiate ORB detector
 	orb = cv2.ORB_create()
 
@@ -232,8 +200,10 @@ def FeatureMatching(kp1, kp2):
 	cv2.imwrite("Matches.png", img3)
 
 
-def match(kp1, kp2):
-	matches = []
+
+#input 4 feature pairs at random
+def RANSAC(p1, p2, p3, p4):
+
 
 	#for point in kp1:
 
