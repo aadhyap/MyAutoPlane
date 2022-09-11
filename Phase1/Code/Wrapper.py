@@ -241,7 +241,7 @@ def featuredescription():
         sub_sample = blur_patch[::5, ::5]
         print('Subsample0::5', sub_sample)
         print('sizesubsample', sub_sample.shape)
-        cv2.imwrite('patch' + str(i) + '.png', sub_sample)
+        # cv2.imwrite('patch' + str(i) + '.png', sub_sample)
 
         # Re-sahpe to 64x1
         feats = sub_sample.reshape(int((patch_size / 5) ** 2), 1)
@@ -254,7 +254,7 @@ def featuredescription():
 
         # Make the variance 1
         feats = feats / (np.std(feats) + epsilon)
-        cv2.imwrite('feature_vector' + str(i) + '.png', feats)
+        # cv2.imwrite('feature_vector' + str(i) + '.png', feats)
         print('featsVarince1', feats)
         feat_desc = np.dstack((feat_desc, feats))
         print('descr', feat_desc[0])
