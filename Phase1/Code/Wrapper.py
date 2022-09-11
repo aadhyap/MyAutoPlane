@@ -106,6 +106,7 @@ def ANMS(cornerScoreImage):
 				all_r.append(coor)'''
 
     all_r.sort(key=lambda x: x[2], reverse=True)
+    print('allr', all_r[:100])
 
     return (all_r[:100])
 
@@ -197,8 +198,10 @@ def featuredescription():
     gray_feat = np.float32(gray_feat)
     # 1st argument --> numbers ranging from 0 to 9,
     # 2nd argument, row = 2, col = 3
-    arrayTest = np.random.randint(50, 100,
-                                  size=(450, 2))  # This needs to be the ANMS output (x and y) of the best corners
+    arrayTest = np.array([[332, 43, 62984], [332, 44, 62485], [331, 44, 62442], [330, 44, 62401], [332, 45, 61988], [331, 45, 61945], [330, 45, 61904], [330, 43, 59105], [331, 43, 58868], [145, 305, 26713], [145, 304, 26690], [145, 303, 26669], [146, 305, 26388], [146, 304, 26365], [146, 303, 26344], [147, 305, 26065], [147, 304, 26042], [147, 303, 26021], [310, 293, 20617], [308, 293, 19962], [309, 293, 19700], [442, 285, 16562], [442, 286, 16465], [441, 285, 16325], [441, 286, 16228], [440, 285, 16090], [440, 286, 15993], [246, 134, 14977], [440, 284, 14965], [247, 134, 14810], [246, 133, 14800], [248, 134, 14645], [247, 133, 14633], [246, 132, 14625], [248, 133, 14468], [247, 132, 14458], [248, 132, 14293], [175, 220, 7673], [174, 220, 7618], [173, 220, 7565], [245, 26, 7514], [175, 221, 7508], [245, 27, 7481], [174, 221, 7453], [245, 28, 7450], [151, 391, 7412], [150, 391, 7405], [149, 391, 7400], [173, 221, 7400], [175, 222, 7345], [246, 26, 7345], [246, 27, 7312], [406, 449, 7300], [174, 222, 7290], [246, 28, 7281], [405, 449, 7241], [173, 222, 7237], [404, 449, 7184], [247, 26, 7178], [247, 27, 7145], [247, 28, 7114], [390, 146, 5440], [52, 288, 5045], [52, 289, 4904], [52, 290, 4765], [88, 363, 4201], [88, 362, 4122], [88, 361, 4045], [192, 151, 3205], [436, 401, 3204], [330, 394, 3172], [435, 401, 3145], [329, 394, 3141], [328, 394, 3112], [436, 402, 3109], [434, 401, 3088], [330, 393, 3065], [435, 402, 3050], [329, 393, 3034], [436, 403, 3016], [296, 202, 3005], [328, 393, 3005], [434, 402, 2993], [330, 392, 2960], [435, 403, 2957], [257, 422, 2952], [329, 392, 2929], [296, 203, 2900], [328, 392, 2900], [434, 403, 2900], [258, 422, 2845], [438, 231, 2813], [296, 204, 2797], [376, 367, 2741], [259, 422, 2740], [376, 368, 2692], [376, 369, 2645], [216, 449, 2341], [380, 49, 2320], [380, 48, 2313]])
+
+    # np.random.randint(50, 100,
+                #                  size=(450, 2))  # This needs to be the ANMS output (x and y) of the best corners
 
     patch_size = 40
 
@@ -212,48 +215,48 @@ def featuredescription():
     epsilon = 10e-10
 
     for i in range(r):
-        print('i for loop featue', i)
+        # print('i for loop featue', i)
 
         # Patch around of the best ANMS
         patch_center = arrayTest[i]
-        print('patccenter', patch_center)
+        # print('patccenter', patch_center)
         patch_x = int(patch_center[0] - patch_size / 2)
-        print('x', patch_x)
+        # print('x', patch_x)
         patch_y = int(patch_center[1] - patch_size / 2)
-        print('y', patch_y)
+        # print('y', patch_y)
 
         patch = img_pad[patch_x:patch_x + patch_size, patch_y:patch_y + patch_size]
-        print('PATCH', patch)
-        print('patchsize', patch.shape)
+        # print('PATCH', patch)
+        # print('patchsize', patch.shape)
 
         # Apply Gauss blur
         blur_patch = cv2.GaussianBlur(patch, (5, 5), 0)
-        print('patchBLUR', blur_patch)
-        print('size BLURPATCH', blur_patch.shape)
+        # print('patchBLUR', blur_patch)
+        # print('size BLURPATCH', blur_patch.shape)
 
         # Sub-sample to 8x8
         sub_sample = blur_patch[::5, ::5]
-        print('Subsample0::5', sub_sample)
-        print('sizesubsample', sub_sample.shape)
-        # cv2.imwrite('patch' + str(i) + '.png', sub_sample)
+        # print('Subsample0::5', sub_sample)
+        # print('sizesubsample', sub_sample.shape)
+        cv2.imwrite('patch' + str(i) + '.png', sub_sample)
 
         # Re-sahpe to 64x1
         feats = sub_sample.reshape(int((patch_size / 5) ** 2), 1)
-        print('Featsub_sampple,shape', feats)
-        print('sizeFeats', feats.shape)
+        # print('Featsub_sampple,shape', feats)
+        # print('sizeFeats', feats.shape)
 
         # Make the mean 0
         feats = feats - np.mean(feats)
-        print('feats', feats)
+        # print('feats', feats)
 
         # Make the variance 1
         feats = feats / (np.std(feats) + epsilon)
-        # cv2.imwrite('feature_vector' + str(i) + '.png', feats)
-        print('featsVarince1', feats)
+        cv2.imwrite('feature_vector' + str(i) + '.png', feats)
+        # print('featsVarince1', feats)
         feat_desc = np.dstack((feat_desc, feats))
-        print('descr', feat_desc[0])
-        print('reshape_64 -np.dstack', feat_desc)
-        print('reshape_64 -np.dstack', feat_desc.shape)
+        # print('descr', feat_desc[0])
+        # print('reshape_64 -np.dstack', feat_desc)
+        # print('reshape_64 -np.dstack', feat_desc.shape)
     print('end features descri')
 
     return feat_desc[:, :, 1:]
