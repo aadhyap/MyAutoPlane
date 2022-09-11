@@ -56,7 +56,6 @@ def ANMS(cornerScoreImage):
 
             # peak local max
             if (cornerScoreImage[i][j] > 0.01 * cornerScoreImage.max()):  # set everything lower than threshold to 0
-
                 corner = [i, j, cornerScoreImage[i][j]]
                 strong.append(corner)
             else:
@@ -64,6 +63,7 @@ def ANMS(cornerScoreImage):
     print("ALL THE STRONGS ", len(strong))
     print(strong)
 
+    radius = [np.inf] * len(strong)
     for n in range(len(strong)):
         x = strong[n][0]
         y = strong[n][1]
@@ -78,42 +78,36 @@ def ANMS(cornerScoreImage):
 
                 if (score > compare_score):
                     distance = ((x - i) ** 2) + ((y - j) ** 2)
-
-                    if (distance < radius):
-                        radius = distance
-        coor = [x, y, radius]
+                if (distance < radius[n]):
+                    radius[n] = distance
+        coor = [x, y, radius[n]]
         all_r.append(coor)
-
     print("ALL THE RADIUSES ")
-
-    '''for x in range(size):
-        for y in range(size):
-            if(cornerScoreImage[x][y] != 0):
-
-                #the next N strong corner
-
-
-                for i in range(size):
-                    for j in range(size):
-
-                        if(cornerScoreImage[i][j] != 0 and cornerScoreImage[x][y] > cornerScoreImage[i][j] and (x != i and y != j)):
-                            distance = ((x - i) ** 2) + ((y-j)**2)
-
-                        if(distance < radius):
-                            radius = distance
-
-
-                coor = [x,y,radius]
-                all_r.append(coor)'''
-
-    all_r.sort(key=lambda x: x[2])
     print(all_r)
 
-    print("N BEST ")
-    print(cornerScoreImage)
-    print('nBest 0 ,2', cornerScoreImage[0][2])
-    print('len and width', cornerScoreImage.shape)
-    return all_r
+    '''for x in range(size):
+		for y in range(size):
+			if(cornerScoreImage[x][y] != 0):
+
+				#the next N strong corner
+
+						
+				for i in range(size):
+					for j in range(size):
+
+						if(cornerScoreImage[i][j] != 0 and cornerScoreImage[x][y] > cornerScoreImage[i][j] and (x != i and y != j)):
+							distance = ((x - i) ** 2) + ((y-j)**2)
+
+						if(distance < radius):
+							radius = distance
+
+
+				coor = [x,y,radius]
+				all_r.append(coor)'''
+
+    all_r.sort(key=lambda x: x[2], reverse=True)
+
+    return (all_r[:100])
 
 
 def CornerDetection():
