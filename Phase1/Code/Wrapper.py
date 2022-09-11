@@ -17,6 +17,7 @@ Worcester Polytechnic Institute
 import numpy as np
 import cv2
 
+
 # Add any python libraries here
 
 
@@ -33,44 +34,120 @@ def main():
     """
 
     """
-	Corner Detection
-	Save Corner detection output as corners.png
-	"""
+    Corner Detection
+    Save Corner detection output as corners.png
+    """
 
 
+def ANMS(cornerScoreImage):
+    print("CALLED ANMS")
+
+    print("THIS IS ALL THE OG SCORES")
+    print(cornerScoreImage)
+
+    radius = np.inf
+    distance = np.inf
+    size = len(cornerScoreImage)
+    all_r = []
+
+    strong = []
+    for i in range(size):
+        for j in range(size):
+
+            # peak local max
+            if (cornerScoreImage[i][j] > 0.01 * cornerScoreImage.max()):  # set everything lower than threshold to 0
+
+                corner = [i, j, cornerScoreImage[i][j]]
+                strong.append(corner)
+            else:
+                cornerScoreImage[i][j] = -np.inf
+    print("ALL THE STRONGS ", len(strong))
+    print(strong)
+
+    for n in range(len(strong)):
+        x = strong[n][0]
+        y = strong[n][1]
+        score = strong[n][2]
+
+        for m in range(len(strong)):
+
+            if (m != n):
+                i = strong[m][0]
+                j = strong[m][1]
+                compare_score = strong[m][2]
+
+                if (score > compare_score):
+                    distance = ((x - i) ** 2) + ((y - j) ** 2)
+
+                    if (distance < radius):
+                        radius = distance
+        coor = [x, y, radius]
+        all_r.append(coor)
+
+    print("ALL THE RADIUSES ")
+
+    '''for x in range(size):
+        for y in range(size):
+            if(cornerScoreImage[x][y] != 0):
+
+                #the next N strong corner
 
 
+                for i in range(size):
+                    for j in range(size):
+
+                        if(cornerScoreImage[i][j] != 0 and cornerScoreImage[x][y] > cornerScoreImage[i][j] and (x != i and y != j)):
+                            distance = ((x - i) ** 2) + ((y-j)**2)
+
+                        if(distance < radius):
+                            radius = distance
 
 
+                coor = [x,y,radius]
+                all_r.append(coor)'''
 
+    all_r.sort(key=lambda x: x[2])
+    print(all_r)
+
+    print("N BEST ")
+    print(cornerScoreImage)
+    print('nBest 0 ,2', cornerScoreImage[0][2])
+    print('len and width', cornerScoreImage.shape)
+    return all_r
 
 
 def CornerDetection():
-	img1 = cv2.imread('../Data/Train/Set1/1.jpg')
-	img2 = cv2.imread('../Data/Train/Set1/2.jpg')
-	img3 = cv2.imread('../Data/Train/Set1/3.jpg')
+    img1 = cv2.imread('../Data/Train/Set1/1.jpg')
+    img2 = cv2.imread('../Data/Train/Set1/2.jpg')
+    img3 = cv2.imread('../Data/Train/Set1/3.jpg')
 
+    gray = cv2.cvtColor(img1, cv2.COLOR_BGR2GRAY)
 
-	gray = cv2.cvtColor(img1,cv2.COLOR_BGR2GRAY)
-	cv2.imwrite("gray.png", gray)
-	gray = np.float32(gray)
+    gray = np.float32(gray)
+    dst = cv2.cornerHarris(gray, 2, 3, 0.04)
+    print('output corner Harris', dst)
 
+    # result is dilated for marking the corners, not important
+    dst = cv2.dilate(dst, None)
+    print('output dilate', dst)
 
+    best = ANMS(dst)
+    print('best after ANMS', best)
 
+    print("PUUTTING ON IMAGE ", len(best))
+    for point in best:
 
+        x = point[0]
+        y = point[1]
+        r = point[2]
 
-	Nstrong =cv2.goodFeaturesToTrack(gray,1000,0.000000001,10)
-	corners = np.int0(Nstrong)
-	print("CORNERS")
-	print(corners)
-	for i in corners:
-	    x,y = i.ravel()
-	    cv2.circle(img1,(x,y),3,255,-1)
+        img1[x][y] = [0, 0, 255]
+        for j in best:
+            if ((((x - j[0]) ** 2) + ((y - j[1]) ** 2)) < r):
+                best.remove(j)
 
+    cv2.imwrite("Nbest.png", img1)
 
-
-	#cv2.imwrite("Harris.png", img1)
-	cv2.imwrite("goodFeaturesToTrack.png", img1)
 
 CornerDetection()
 
@@ -78,11 +155,117 @@ CornerDetection()
 Perform ANMS: Adaptive Non-Maximal Suppression
 Save ANMS output as anms.png
 """
+# Input: Image of the cornerscore
 
+
+# first it needs a corner Nstrong coordinate
+
+# Then it needs to score of the Nstrong coordinate
+
+# Then feed it to the the thing
+
+
+# every 5th row and 42nd
+# gaussian blur after
+
+
+# add episolon
+# down sample to get more points the two points are not as close
+# blending do same intentsity
+
+# sprt r in descending order
+# panaroma stiching find the homography matrix
+# take inverse than the homography then apply i(original image, inverse pertreb it, then inverse of that thing, take the normal )
+
+
+# superglue magic leap read the paper
+# take patch of image, w and h
+# take the inveerse and width and height
+# take a white square in the middle of a black square at the end you should have a white square
+# cv2.warpperspective, don't use it bacause it's not differentiable instead use cornea
+# Take the average of the supervised, use supervised P(a) which is the patch and P(b) has to be similirarity (P(a) - P(b)) <-- loss unsupervised
+# use that loss to backpropogate, use cornea.
+# spatial transform network (STN)
+
+
+# Tesla uses pure math
 """
 Feature Descriptors
 Save Feature Descriptor output as FD.png
 """
+
+
+def featuredescription():
+    print('Enter Fetauredescription')
+    image = cv2.imread('../Data/Train/Set1/1.jpg')
+    # cv2.imwrite('img_feature.png', image)
+    gray_feat = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    gray_feat = np.float32(gray_feat)
+    # 1st argument --> numbers ranging from 0 to 9,
+    # 2nd argument, row = 2, col = 3
+    arrayTest = np.random.randint(50, 100,
+                                  size=(450, 2))  # This needs to be the ANMS output (x and y) of the best corners
+
+    patch_size = 40
+
+    r, c = arrayTest.shape  # Size of the ANMS
+    # print('r,c', r, c)
+    img_pad = np.pad(gray_feat, patch_size, 'constant',
+                     constant_values=0)  # add a border around image for patching, zero to add black countering
+
+    feat_desc = np.array(np.zeros((int((patch_size / 5) ** 2), 1)))
+
+    epsilon = 10e-10
+
+    for i in range(r):
+        print('i for loop featue', i)
+
+        # Patch around of the best ANMS
+        patch_center = arrayTest[i]
+        print('patccenter', patch_center)
+        patch_x = int(patch_center[0] - patch_size / 2)
+        print('x', patch_x)
+        patch_y = int(patch_center[1] - patch_size / 2)
+        print('y', patch_y)
+
+        patch = img_pad[patch_x:patch_x + patch_size, patch_y:patch_y + patch_size]
+        print('PATCH', patch)
+        print('patchsize', patch.shape)
+
+        # Apply Gauss blur
+        blur_patch = cv2.GaussianBlur(patch, (5, 5), 0)
+        print('patchBLUR', blur_patch)
+        print('size BLURPATCH', blur_patch.shape)
+
+        # Sub-sample to 8x8
+        sub_sample = blur_patch[::5, ::5]
+        print('Subsample0::5', sub_sample)
+        print('sizesubsample', sub_sample.shape)
+        cv2.imwrite('patch' + str(i) + '.png', sub_sample)
+
+        # Re-sahpe to 64x1
+        feats = sub_sample.reshape(int((patch_size / 5) ** 2), 1)
+        print('Featsub_sampple,shape', feats)
+        print('sizeFeats', feats.shape)
+
+        # Make the mean 0
+        feats = feats - np.mean(feats)
+        print('feats', feats)
+
+        # Make the variance 1
+        feats = feats / (np.std(feats) + epsilon)
+        cv2.imwrite('feature_vector' + str(i) + '.png', feats)
+        print('featsVarince1', feats)
+        feat_desc = np.dstack((feat_desc, feats))
+        print('descr', feat_desc[0])
+        print('reshape_64 -np.dstack', feat_desc)
+        print('reshape_64 -np.dstack', feat_desc.shape)
+    print('end features descri')
+
+    return feat_desc[:, :, 1:]
+
+
+featuredescription()
 
 """
 Feature Matching
@@ -97,7 +280,6 @@ Refine: RANSAC, Estimate Homography
 Image Warping + Blending
 Save Panorama output as mypano.png
 """
-
 
 if __name__ == "__main__":
     main()
