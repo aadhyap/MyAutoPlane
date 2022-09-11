@@ -112,8 +112,9 @@ def CornerDetection():
 
 
 	cv2.imwrite("Nbest.png", img1)
+	return best
 
-CornerDetection()
+#CornerDetection()
 
 
 """
@@ -169,43 +170,145 @@ Save Feature Matching output as matching.png
 """
 
 #input image 1 point and sum of all image 2 points ("are they talking about features?")
-def FeatureMatching(kp1, kp2):
-	img1 = cv2.imread('../Data/Train/Set1/1.jpg')
-	img2 = cv2.imread('../Data/Train/Set1/2.jpg')
+def featuredescription():
+    print('Enter Fetauredescription')
+    image = cv2.imread('../Data/Train/Set1/1.jpg')
+    # cv2.imwrite('img_feature.png', image)
+    gray_feat = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    gray_feat = np.float32(gray_feat)
+    # 1st argument --> numbers ranging from 0 to 9,
+    # 2nd argument, row = 2, col = 3
+    arrayTest = np.array(CornerDetection())
 
 
-	#each keypoint (64 by 1 vector)
+    #np.random.randint(50, 100, size=(450, 2))  # This needs to be the ANMS output (x and y) of the best corners
 
-	# Initiate ORB detector
-	orb = cv2.ORB_create()
+    patch_size = 40
 
-	kp1, des1 = orb.detectAndCompute(img1,None)
-	kp2, des2 = orb.detectAndCompute(img2,None)
-	
+    r, c = arrayTest.shape  # Size of the ANMS
+    # print('r,c', r, c)
+    img_pad = np.pad(gray_feat, patch_size, 'constant',
+                     constant_values=0)  # add a border around image for patching, zero to add black countering
 
-	# create BFMatcher object
-	bf = cv2.BFMatcher(cv2.NORM_HAMMING, crossCheck=True)
+    feat_desc = np.array(np.zeros((int((patch_size / 5) ** 2), 1)))
 
-	# Match descriptors.
-	matches = bf.match(des1,des2)
+    epsilon = 10e-10
+
+    for i in range(r):
+        print('i for loop featue', i)
+
+        # Patch around of the best ANMS
+        patch_center = arrayTest[i]
+        print('patccenter', patch_center)
+        patch_x = int(patch_center[0] - patch_size / 2)
+        print('x', patch_x)
+        patch_y = int(patch_center[1] - patch_size / 2)
+        print('y', patch_y)
+
+        patch = img_pad[patch_x:patch_x + patch_size, patch_y:patch_y + patch_size]
+        print('PATCH', patch)
+        print('patchsize', patch.shape)
+
+        # Apply Gauss blur
+        blur_patch = cv2.GaussianBlur(patch, (5, 5), 0)
+        print('patchBLUR', blur_patch)
+        print('size BLURPATCH', blur_patch.shape)
+
+        # Sub-sample to 8x8
+        sub_sample = blur_patch[::5, ::5]
+        print('Subsample0::5', sub_sample)
+        print('sizesubsample', sub_sample.shape)
+        cv2.imwrite('patch' + str(i) + '.png', sub_sample)
+
+        # Re-sahpe to 64x1
+        feats = sub_sample.reshape(int((patch_size / 5) ** 2), 1)
+        print('Featsub_sampple,shape', feats)
+        print('sizeFeats', feats.shape)
+
+        # Make the mean 0
+        feats = feats - np.mean(feats)
+        print('feats', feats)
+
+        # Make the variance 1
+        feats = feats / (np.std(feats) + epsilon)
+        cv2.imwrite('feature_vector' + str(i) + '.png', feats)
+        print('featsVarince1', feats)
+        feat_desc = np.dstack((feat_desc, feats))
+        print('descr', feat_desc[0])
+        print('reshape_64 -np.dstack', feat_desc)
+        print('reshape_64 -np.dstack', feat_desc.shape)
+    print('end features descri')
+
+    return feat_desc[:, :, 1:]
 
 
-	# Sort them in the order of their distance.
-	matches = sorted(matches, key = lambda x:x.distance)
+featuredescription()
 
 
-	# Draw first 10 matches.
-	img3 = cv2.drawMatches(img1,kp1,img2,kp2,matches[:10],None,flags=cv2.DrawMatchesFlags_NOT_DRAW_SINGLE_POINTS)
-
-	cv2.imwrite("Matches.png", img3)
+#Feature Matching
 
 
 
 #input 4 feature pairs at random
+#select at random 4 points to fit the model
 def RANSAC(p1, p2, p3, p4):
 
 
-	#for point in kp1:
+
+
+#input: a list 4 selected random pairs for img1 and img2
+def homography(img1_kp, img2_kp):
+	A = []
+
+	for i in range(len(img1_kp)):
+		x = img1_kp[i][0]
+		y = img1_jp[i][1]
+
+		u = img2_kp[i][0]
+		v = img2_kp[i][1]
+
+		A.append([x, y, 1, 0, 0, 0, (-u*x), (-u*y), -u])
+		A.append([0, 0, 0, x, y, 1, (-v*x), (-v*y), -v])
+
+	#creates Array A
+	A = np.asarray(A)
+	zeros = np.zeros((8, 1))
+	#H = zeros @ np.linalg.pinv(A) 
+	H = numpy.linalg.solve(A,zeros)
+	print(H)
+
+
+
+
+
+
+
+
+
+
+
+
+
+def inliers():
+
+	num_inliers = 4
+	s = 4 #minimum needed to fit the model (points)
+	N = np.inf #number of samples
+	count = 0
+	e = 1.0
+
+	while N > count:
+		E = 1 - (num_inliers) / total_points
+
+		if(E  < e):
+			e = E
+
+			N = numpy.log(1-p) / log(1-(1-e) ** s)
+
+		count += 1
+
+
+
 
 
 
