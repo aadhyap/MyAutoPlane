@@ -328,14 +328,7 @@ def inliers(pair2, img1,  H): #how do i know they are a pair
 		best.append()
 
 
-
-
-
-
-
-
-
-
+'''
 
 	num_inliers = 4
 	s = 4 #minimum needed to fit the model (points)
@@ -351,7 +344,7 @@ def inliers(pair2, img1,  H): #how do i know they are a pair
 
 			N = numpy.log(1-p) / log(1-(1-e) ** s)
 
-		count += 1
+		count += 1'''
 
 
 
