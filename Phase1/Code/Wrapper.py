@@ -268,8 +268,8 @@ def RANSAC(matches):
 def randompairs(matches):
 
 	pairs = []
-	for match in matches:
-
+	for i in range(4):
+		match = matches[i]
 		pairs.append(pairs)
 		img1 = []
 		img2 = []
