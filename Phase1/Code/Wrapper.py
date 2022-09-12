@@ -251,7 +251,32 @@ featuredescription()
 
 #input 4 feature pairs at random
 #select at random 4 points to fit the model
-def RANSAC(p1, p2, p3, p4):
+
+
+
+def RANSAC(matches):
+
+	N = 500
+
+
+	for i in N:
+		pairs = randompairs(matches)
+		H = homography(pairs)
+
+
+
+def randompairs(matches):
+
+	pairs = []
+	for match in matches:
+
+		pairs.append(pairs)
+		img1 = []
+		img2 = []
+		for match in pairs:
+			img1.append(match[0])
+			img2.append(match[1])
+		H = homography(img1, img2)
 
 
 
@@ -259,6 +284,7 @@ def RANSAC(p1, p2, p3, p4):
 #input: a list 4 selected random pairs for img1 and img2
 def homography(img1_kp, img2_kp):
 	A = []
+	points = []
 
 	for i in range(len(img1_kp)):
 		x = img1_kp[i][0]
@@ -269,14 +295,37 @@ def homography(img1_kp, img2_kp):
 
 		A.append([x, y, 1, 0, 0, 0, (-u*x), (-u*y), -u])
 		A.append([0, 0, 0, x, y, 1, (-v*x), (-v*y), -v])
+		points = points + [u, v]
 
 	#creates Array A
-	A = np.asarray(A)
+	A = np.array(A)
+	H = np.linalg.lstsq(A, points)[0]
 	zeros = np.zeros((8, 1))
 	#H = zeros @ np.linalg.pinv(A) 
-	H = numpy.linalg.solve(A,zeros)
+	H = np.reshape((np.concatenate((H, [1]), axis=-1)), (3, 3))
+	#H = np.linalg.solve(A,zeros)
 	print(H)
 
+	return H
+
+	#Do we transpose H?
+
+
+
+
+#send pairs 
+def inliers(pair2, img1,  H): #how do i know they are a pair
+
+	Himg1 = H * img1 
+	threshold = 3
+	best = []
+
+
+	s = np.sum((img2-H)**2) #???
+
+	if s < threshold:
+		#inlier
+		best.append()
 
 
 
@@ -287,9 +336,6 @@ def homography(img1_kp, img2_kp):
 
 
 
-
-
-def inliers():
 
 	num_inliers = 4
 	s = 4 #minimum needed to fit the model (points)
