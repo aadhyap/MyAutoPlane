@@ -260,8 +260,9 @@ def RANSAC(matches):
 
 
 	for i in N:
-		pairs = randompairs(matches)
-		H = homography(pairs)
+		pair1, pair2 = randompairs(matches)
+		H = homography(pair1, pair2)
+
 
 
 
@@ -276,7 +277,7 @@ def randompairs(matches):
 		for match in pairs:
 			img1.append(match[0])
 			img2.append(match[1])
-		H = homography(img1, img2)
+		return img1, img2
 
 
 
@@ -314,18 +315,24 @@ def homography(img1_kp, img2_kp):
 
 
 #send pairs 
-def inliers(pair2, img1,  H): #how do i know they are a pair
+def inliers(matches,  H): #how do i know they are a pair
 
 	Himg1 = H * img1 
 	threshold = 3
 	best = []
 
 
-	s = np.sum((img2-H)**2) #???
 
-	if s < threshold:
-		#inlier
-		best.append()
+	for match in matches: 
+
+
+
+
+		s = np.sum((img2-H)**2) #???
+
+		if s < threshold:
+			#inlier
+			best.append()
 
 
 '''
