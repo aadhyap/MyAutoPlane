@@ -56,7 +56,9 @@ def main():
     Save ANMS output as anms.png
     """
     best1 = ANMS(corners1)
+    print('corners best1', best1)
     best2 = ANMS(corners2)
+    print('corners best2', best2)
     # print('Outpu ANMS', best1)
     # print('lenght best', len(best1))
     # best = np.array(best)
@@ -194,16 +196,17 @@ def featuredescription(image, patch_size, anmsPos, epsilon, feat_desc):
 
     r, c = anmsPos.shape  # Size of the ANMS
     print('anms.shape', r, c)
-    img_pad = np.pad(image, patch_size, 'constant',
+    img_pad = np.pad(image, 40, 'constant',
                      constant_values=0)  # add a border around image for patching, zero to add black countering
+    cv2.imwrite('imagepad.png', img_pad)
 
     for i in range(r):
         patch_center = anmsPos[i]
-        # print('center', patch_center)
-        patch_x = int(patch_center[0] - patch_size / 2)
-        # print('x', patch_x)
-        patch_y = int(patch_center[1] - patch_size / 2)
-        # print('y', patch_y)
+        print('pos', patch_center)
+        patch_x = abs(int(patch_center[0] - patch_size / 2))
+        print('x', patch_x)
+        patch_y = abs(int(patch_center[1] - patch_size / 2))
+        print('y', patch_y)
 
         patch = img_pad[patch_x:patch_x + patch_size, patch_y:patch_y + patch_size]
         # print('PATCH', patch)
@@ -222,8 +225,8 @@ def featuredescription(image, patch_size, anmsPos, epsilon, feat_desc):
 
         # Re-sahpe to 64x1
         feats = sub_sample.reshape(int((patch_size / 5) ** 2), 1)
-        # print('Featsub_sampple,shape', feats)
-        # print('sizeFeats', feats.shape)
+        print('Featsub_sampple,shape', feats)
+        print('sizeFeats', feats.shape)
 
         # Make the mean 0
         feats = feats - np.mean(feats)
