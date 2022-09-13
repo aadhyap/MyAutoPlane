@@ -73,11 +73,11 @@ def featuredescription(image, patch_size, anmsPos, epsilon, feat_desc):
     return feat_desc[:, :, 1:]
 
 
-def imageResize():
+def imageResize(w, h):
     img1 = cv2.imread('../Data/Train/169.jpg')
     img1_gray = cv2.cvtColor(img1, cv2.COLOR_BGR2GRAY)
-    width = int(600)
-    height = int(600)
+    width = int(w)
+    height = int(h)
     dim = (width, height)
     # resize image
     resized = cv2.resize(img1_gray, dim, interpolation = cv2.INTER_AREA)
@@ -85,9 +85,11 @@ def imageResize():
     return resized
 
 def main():
+
+    width, height = 600, 600
     
 
-    img1 = imageResize()
+    img1 = imageResize(width, height)
     print("IMAGE 1")
     print(img1)
     #cv2.imwrite("4corners.png", img1)
@@ -115,10 +117,25 @@ def main():
 
 
     new_corners, img2= newCorners(corners, img1)
+
+
+
     cv2.imwrite("newcorners.png", img2)
 
+    warped = extract(corners, new_corners, img2, width, height)
+    cv2.imwrite("warped.png", warped)
 
-def newCorners(corners, img1):
+
+
+def extract(corners, new_corners, img, maxWidth, maxHeight):
+    H = cv2.getPerspectiveTransform(np.float32(corners), np.float32(new_corners)) #Did I do this in the right order? HbA, how do you align?
+    H = np.linalg.inv(H) #is this right
+    out = cv2.warpPerspective(img,H,(maxWidth, maxHeight),flags=cv2.INTER_LINEAR)
+    return out
+
+
+
+def newCorners(corners, img):
     newcorners = []
 
     for coor in corners:
@@ -127,10 +144,10 @@ def newCorners(corners, img1):
         newx = random.randint(coor[0] - 20, coor[0] + 20)
         newy = random.randint(coor[1] - 20, coor[1] + 20)
         newcorners.append([newx, newy])
-        cv2.circle(img1, (newx,newy) , 10, (255,0,0) , 2)
+        cv2.circle(img, (newx,newy) , 10, (255,0,0) , 2)
     print("CORNERS")
     print(newcorners)
-    return newcorners, img1
+    return newcorners, img
 
 
 
