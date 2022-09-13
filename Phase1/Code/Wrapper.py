@@ -90,6 +90,10 @@ def main():
     # print('best1', best1_array)
     # print('shape', best1_array.shape)
     best2_array = np.array(best2)
+    best1_array = np.delete(best1_array, 2, 1)
+    best2_array = np.delete(best2_array, 2, 1)
+    print('best1', best1_array)
+    print('best2', best2_array)
     patch_size = 40
     feat_desc = np.array(np.zeros((int((patch_size / 5) ** 2), 1)))
     epsilon = 10e-10
@@ -118,20 +122,23 @@ def main():
         # print('ratio', ratio)
         print('ssd, indx, sorted', ssd, ssdsorted, indices)
         if ratio < ratioFmatch:
-            matchpair.append(best2[indices[0]])
+            matchpair.append(best2_array[indices[0]])
             print('matchpair', matchpair)
     # matchpair = np.stack((matchpair1,matchpair2), axis=1)
 
     print('match pair final', matchpair)
-    matchpair =np.array(matchpair)
+    matchpair = np.array(matchpair)
+    #matchpair = np.delete(matchpair, 2, 1)
     print('matchpair array', matchpair)
     print('match size', matchpair.shape)
 
     # idea to get the confidents features on 2 for each index that I have.
     # continue here
 
-    #imgmatch = cv2.drawMatches(img1, feature1,img2, feature2, matchpair, None,flags=1)
-    #cv2.imwrite('matchpic.png', imgmatch)
+
+
+    imgmatch = cv2.drawMatches(img1, best1_array,img2, best2_array, matchpair, None,flags=1)
+    cv2.imwrite('matchpic.png', imgmatch)
 
 
 
