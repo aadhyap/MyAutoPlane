@@ -257,11 +257,50 @@ featuredescription()
 def RANSAC(matches):
 
 	N = 500
+	bestcount = 0
+	bestmatches = []
 
 
 	for i in N:
 		pair1, pair2 = randompairs(matches)
 		H = homography(pair1, pair2)
+
+
+
+		Himg1 = H * img1 #apply to matches of image 1 or all of image 1?
+		threshold = 3
+		best = []
+
+		count = 0
+		allinliers
+
+
+
+		for match in matches_img1:
+			#match is an x and y coordinate
+
+			img_1_val = Himg1[match[0]][match[1]]
+			img_2_val = img2[match[0]][match[1]]
+
+
+
+
+			s = np.sum((img_2_val - img_1_val)**2) #???
+
+			if s < threshold:
+				#inlier
+				count += 1
+				allinliers.append([match[0], match[1]])
+
+
+
+		if(count > bestcount):
+			bestcount = count 
+			bestmatches = allinliers
+
+	return allinliers #coordinates of the best matches 
+
+
 
 
 
@@ -310,24 +349,11 @@ def homography(img1_kp, img2_kp):
 
 
 #send pairs 
-def inliers(matches,  H): #how do i know they are a pair
-
-	Himg1 = H * img1 
-	threshold = 3
-	best = []
-
-
-
-	for match in matches: 
 
 
 
 
-		s = np.sum((img2-H)**2) #???
-
-		if s < threshold:
-			#inlier
-			best.append()
+			
 
 
 '''
