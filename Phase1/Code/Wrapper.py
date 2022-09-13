@@ -16,7 +16,7 @@ Worcester Polytechnic Institute
 
 import numpy as np
 import cv2
-import math
+from operator import itemgetter
 
 
 # Add any python libraries here
@@ -58,7 +58,7 @@ def main():
     best1 = ANMS(corners1)
     print('corners best1', best1)
     best2 = ANMS(corners2)
-    print('corners best2', best2)
+    # print('corners best2', best2)
     # print('Outpu ANMS', best1)
     # print('lenght best', len(best1))
     # best = np.array(best)
@@ -66,37 +66,73 @@ def main():
     # print("PUUTTING ON IMAGE ", len(best1))
 
     'What is happening here'
-    '''for point in best:
-        print('enter i best')
+    for point in best1:
+        # print('enter i best')
         x = point[0]
-        print('x', x)
+        # print('x', x)
         y = point[1]
-        print('y', y)
+        # print('y', y)
         r = point[2]
-        print('r', r)
+        # print('r', r)
 
         img1[x][y] = [0, 0, 255]
-        print('img1[x][y]', img1[x][y])
-        for j in best:
-            print('enter j', j)
-            if ((((x - j[0]) ** 2) + ((y - j[1]) ** 2)) < r):
-                best.remove(j)
-    print('best after', best)
-    print('best after length', len(best))
+        # print('img1[x][y]', img1[x][y])
+        # print('best after', best1)
+        # print('best after length', len(best1))
 
-    cv2.imwrite("Nbest.png", img1)'''
+    cv2.imwrite("Nbestnumpoints.png", img1)
 
     """
     Feature Descriptors
     Save Feature Descriptor output as FD.png
     """
-    best1 = np.array(best1)
-    best2 = np.array(best2)
+    best1_array = np.array(best1)
+    # print('best1', best1_array)
+    # print('shape', best1_array.shape)
+    best2_array = np.array(best2)
     patch_size = 40
     feat_desc = np.array(np.zeros((int((patch_size / 5) ** 2), 1)))
     epsilon = 10e-10
-    feature1 = featuredescription(img1_gray, patch_size, best1, epsilon, feat_desc)
-    feature2 = featuredescription(img2_gray, patch_size, best2, epsilon, feat_desc)
+    ratioFmatch = 0.99
+
+    feature1 = featuredescription(img1_gray, patch_size, best1_array, epsilon, feat_desc)
+    feature2 = featuredescription(img2_gray, patch_size, best2_array, epsilon, feat_desc)
+    # print('featurev1', feature1)
+    # print('featurev1shape', feature1.shape)
+    print('featurev2', feature2)
+    print('featurev2shape', feature2.shape)
+
+    ssd = []
+    matchpair = []
+
+    r, c, s = feature1.shape
+    h, v, d = feature2.shape
+
+    for i in range(s):
+        print('feature in the for loop', i)
+        ssd = []
+        for j in range(d):
+            ssd.append(sum(pow(feature1[:, :, i] - feature2[:, :, j], 2)))
+        indices, ssdsorted = zip(*sorted(enumerate(ssd), key=itemgetter(1)))
+        ratio = ssdsorted[0] / ssdsorted[1]
+        # print('ratio', ratio)
+        print('ssd, indx, sorted', ssd, ssdsorted, indices)
+        if ratio < ratioFmatch:
+            matchpair.append(best2[indices[0]])
+            print('matchpair', matchpair)
+    # matchpair = np.stack((matchpair1,matchpair2), axis=1)
+
+    print('match pair final', matchpair)
+    matchpair =np.array(matchpair)
+    print('matchpair array', matchpair)
+    print('match size', matchpair.shape)
+
+    # idea to get the confidents features on 2 for each index that I have.
+
+    #imgmatch = cv2.drawMatches(img1, feature1,img2, feature2, matchpair, None,flags=1)
+    #cv2.imwrite('matchpic.png', imgmatch)
+
+
 
 
 def CornerDetection(image):
@@ -160,26 +196,6 @@ def ANMS(cornerScoreImage):
     # print("ALL THE RADIUSES ")
     # print(all_r)
 
-    '''for x in range(size):
-		for y in range(size):
-			if(cornerScoreImage[x][y] != 0):
-
-				#the next N strong corner
-
-						
-				for i in range(size):
-					for j in range(size):
-
-						if(cornerScoreImage[i][j] != 0 and cornerScoreImage[x][y] > cornerScoreImage[i][j] and (x != i and y != j)):
-							distance = ((x - i) ** 2) + ((y-j)**2)
-
-						if(distance < radius):
-							radius = distance
-
-
-				coor = [x,y,radius]
-				all_r.append(coor)'''
-
     all_r.sort(key=lambda x: x[2], reverse=True)
     # print('allr', all_r[:100])
     return all_r[:100]
@@ -195,18 +211,18 @@ def featuredescription(image, patch_size, anmsPos, epsilon, feat_desc):
                 #                  size=(450, 2))  # This needs to be the ANMS output (x and y) of the best corners
 
     r, c = anmsPos.shape  # Size of the ANMS
-    print('anms.shape', r, c)
+    #ac print('anms.shape', r, c)
     img_pad = np.pad(image, 40, 'constant',
                      constant_values=0)  # add a border around image for patching, zero to add black countering
     cv2.imwrite('imagepad.png', img_pad)
 
     for i in range(r):
         patch_center = anmsPos[i]
-        print('pos', patch_center)
+        #ac print('pos', patch_center)
         patch_x = abs(int(patch_center[0] - patch_size / 2))
-        print('x', patch_x)
+        #ac print('x', patch_x)
         patch_y = abs(int(patch_center[1] - patch_size / 2))
-        print('y', patch_y)
+        #ac print('y', patch_y) # Here there is a problem with the axis Y for image 2 when the value is less than 20.
 
         patch = img_pad[patch_x:patch_x + patch_size, patch_y:patch_y + patch_size]
         # print('PATCH', patch)
@@ -221,12 +237,12 @@ def featuredescription(image, patch_size, anmsPos, epsilon, feat_desc):
         sub_sample = blur_patch[::5, ::5]
         # print('Subsample0::5', sub_sample)
         # print('sizesubsample', sub_sample.shape)
-        cv2.imwrite('patch' + str(i) + '.png', sub_sample)
+        # cv2.imwrite('patch' + str(i) + '.png', sub_sample)
 
         # Re-sahpe to 64x1
         feats = sub_sample.reshape(int((patch_size / 5) ** 2), 1)
-        print('Featsub_sampple,shape', feats)
-        print('sizeFeats', feats.shape)
+        #ac print('Featsub_sampple,shape', feats)
+        #ac print('sizeFeats', feats.shape)
 
         # Make the mean 0
         feats = feats - np.mean(feats)
@@ -234,9 +250,9 @@ def featuredescription(image, patch_size, anmsPos, epsilon, feat_desc):
 
         # Make the variance 1
         feats = feats / (np.std(feats) + epsilon)
-        cv2.imwrite('feature_vector' + str(i) + '.png', feats)
+        # cv2.imwrite('feature_vector' + str(i) + '.png', feats)
         # print('featsVarince1', feats)
-        print('feature vector', i)
+        #ac print('feature vector', i)
         feat_desc = np.dstack((feat_desc, feats))
         # print('descr', feat_desc[0])
         # print('reshape_64 -np.dstack', feat_desc)
