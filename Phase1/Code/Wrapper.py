@@ -284,28 +284,23 @@ def randompairs(matches):
 
 #input: a list 4 selected random pairs for img1 and img2
 def homography(img1_kp, img2_kp):
-	A = []
-	points = []
+	corners =[]
+	new_corners = []
+
+
 
 	for i in range(len(img1_kp)):
 		x = img1_kp[i][0]
 		y = img1_jp[i][1]
+		corners.append([x,y])
 
 		u = img2_kp[i][0]
 		v = img2_kp[i][1]
+		new_corners.append([u,v])
 
-		A.append([x, y, 1, 0, 0, 0, (-u*x), (-u*y), -u])
-		A.append([0, 0, 0, x, y, 1, (-v*x), (-v*y), -v])
-		points = points + [u, v]
 
-	#creates Array A
-	A = np.array(A)
-	H = np.linalg.lstsq(A, points)[0]
-	zeros = np.zeros((8, 1))
-	#H = zeros @ np.linalg.pinv(A) 
-	H = np.reshape((np.concatenate((H, [1]), axis=-1)), (3, 3))
-	#H = np.linalg.solve(A,zeros)
-	print(H)
+	H = cv2.getPerspectiveTransform(np.float32(corners), np.float32(new_corners)) 
+    H = np.linalg.inv(H) #is this right
 
 	return H
 
