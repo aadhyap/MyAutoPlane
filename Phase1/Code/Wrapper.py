@@ -213,7 +213,7 @@ def featuredescription(image, patch_size, anmsPos, epsilon, feat_desc):
 
     r, c = anmsPos.shape  # Size of the ANMS
     #ac print('anms.shape', r, c)
-    img_pad = np.pad(image, 40, 'constant',
+    img_pad = np.pad(image, 50, 'constant',
                      constant_values=0)  # add a border around image for patching, zero to add black countering
     cv2.imwrite('imagepad.png', img_pad)
 
