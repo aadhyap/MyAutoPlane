@@ -128,6 +128,7 @@ def main():
     print('match size', matchpair.shape)
 
     # idea to get the confidents features on 2 for each index that I have.
+    # continue here
 
     #imgmatch = cv2.drawMatches(img1, feature1,img2, feature2, matchpair, None,flags=1)
     #cv2.imwrite('matchpic.png', imgmatch)
