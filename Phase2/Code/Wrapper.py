@@ -17,6 +17,7 @@ Worcester Polytechnic Institute
 
 import numpy as np
 import cv2
+import random
 
 # Add any python libraries here
 
@@ -46,19 +47,13 @@ def featuredescription(image, patch_size, anmsPos, epsilon, feat_desc):
         #ac print('y', patch_y) # Here there is a problem with the axis Y for image 2 when the value is less than 20.
 
         patch = img_pad[patch_x:patch_x + patch_size, patch_y:patch_y + patch_size]
-        # print('PATCH', patch)
-        # print('patchsize', patch.shape)
+  
 
         # Apply Gauss blur
         blur_patch = cv2.GaussianBlur(patch, (5, 5), 0)
-        # print('patchBLUR', blur_patch)
-        # print('size BLURPATCH', blur_patch.shape)
-
-        # Sub-sample to 8x8
+     
         sub_sample = blur_patch[::5, ::5]
-        # print('Subsample0::5', sub_sample)
-        # print('sizesubsample', sub_sample.shape)
-        # cv2.imwrite('patch' + str(i) + '.png', sub_sample)
+        
 
         # Re-sahpe to 64x1
         feats = sub_sample.reshape(int((patch_size / 5) ** 2), 1)
@@ -71,29 +66,83 @@ def featuredescription(image, patch_size, anmsPos, epsilon, feat_desc):
 
         # Make the variance 1
         feats = feats / (np.std(feats) + epsilon)
-        # cv2.imwrite('feature_vector' + str(i) + '.png', feats)
-        # print('featsVarince1', feats)
-        #ac print('feature vector', i)
+       
         feat_desc = np.dstack((feat_desc, feats))
-        # print('descr', feat_desc[0])
-        # print('reshape_64 -np.dstack', feat_desc)
-        # print('reshape_64 -np.dstack', feat_desc.shape)
     print('end features descrip')
 
     return feat_desc[:, :, 1:]
 
-def main():
 
+def imageResize():
     img1 = cv2.imread('../Data/Train/169.jpg')
     img1_gray = cv2.cvtColor(img1, cv2.COLOR_BGR2GRAY)
+    width = int(600)
+    height = int(600)
+    dim = (width, height)
+    # resize image
+    resized = cv2.resize(img1_gray, dim, interpolation = cv2.INTER_AREA)
+    cv2.imwrite("imageResize.png", resized)
+    return resized
+
+def main():
+    
+
+    img1 = imageResize()
+    print("IMAGE 1")
+    print(img1)
+    #cv2.imwrite("4corners.png", img1)
+
+
+
+    
 
     patch_size = 40
     feat_desc = np.array(np.zeros((int((patch_size / 5) ** 2), 1)))
     epsilon = 10e-10
     ratioFmatch = 0.99
 
-    feature1 = featuredescription(img1_gray, patch_size, best1_array, epsilon, feat_desc)
-    feature2 = featuredescription(img2_gray, patch_size, best2_array, epsilon, feat_desc)
+    corners = [[100, 100], [200, 100], [100, 200], [200, 200]]
+    '''img1[100][100] = [0,0,255] 
+    img1[200][100] = [0,0,255] 
+    img1[100][200]= [0,0,255] 
+    img1[200][200] = [0,0,255] '''
+
+    cv2.circle(img1, (100,100) , 10, (0,0,255) , 2)
+    cv2.circle(img1, (200,100) , 10, (0,0,255) , 2)
+    cv2.circle(img1, (100,200) , 10, (0,0,255) , 2)
+    cv2.circle(img1, (200,200) , 10, (0,0,255) , 2)
+    cv2.imwrite("4corners.png", img1)
+
+
+    new_corners, img2= newCorners(corners, img1)
+    cv2.imwrite("newcorners.png", img2)
+
+
+def newCorners(corners, img1):
+    newcorners = []
+
+    for coor in corners:
+
+
+        newx = random.randint(coor[0] - 20, coor[0] + 20)
+        newy = random.randint(coor[1] - 20, coor[1] + 20)
+        newcorners.append([newx, newy])
+        cv2.circle(img1, (newx,newy) , 10, (255,0,0) , 2)
+    print("CORNERS")
+    print(newcorners)
+    return newcorners, img1
+
+
+
+
+
+
+
+
+
+
+    #feature1 = featuredescription(img1_gray, patch_size, pts, epsilon, feat_desc)
+    #feature2 = featuredescription(img2_gray, patch_size, best2_array, epsilon, feat_desc)
 
 
     # Add any Command Line arguments here
