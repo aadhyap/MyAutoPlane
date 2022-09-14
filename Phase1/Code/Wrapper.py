@@ -254,7 +254,7 @@ featuredescription()
 
 
 
-def RANSAC(matches):
+def RANSAC(matches):# parametes is all img1 points matches and img2point matches
 
 	N = 500
 	bestcount = 0
@@ -264,7 +264,7 @@ def RANSAC(matches):
 
 	for i in N:
 
-		pair1, pair2 = randompairs(matches)
+		pair1, pair2 = randompairs(matches) #delete this line you don't need random pairs function. Uses img1points and img2points instead
 		H = homography(pair1, pair2)
 		fordot = np.concatenate((pair1, np.ones((pair1.shape[0], 1))), axis = 1 )
 		img2_new = np.dot(H, fordot.T )
