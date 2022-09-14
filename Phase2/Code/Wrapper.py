@@ -109,10 +109,10 @@ def main():
     img1[100][200]= [0,0,255] 
     img1[200][200] = [0,0,255] '''
 
-    cv2.circle(img1, (100,100) , 10, (0,0,255) , 2)
-    cv2.circle(img1, (200,100) , 10, (0,0,255) , 2)
-    cv2.circle(img1, (100,200) , 10, (0,0,255) , 2)
-    cv2.circle(img1, (200,200) , 10, (0,0,255) , 2)
+    cv2.circle(img1, (100,100) , 10, (0,0,255) , 2) #bottom left
+    cv2.circle(img1, (200,100) , 10, (0,0,255) , 2) #bottom right
+    cv2.circle(img1, (100,200) , 10, (0,0,255) , 2)# top left
+    cv2.circle(img1, (200,200) , 10, (0,0,255) , 2) #top right
     cv2.imwrite("4corners.png", img1)
 
 
@@ -129,8 +129,75 @@ def main():
 
 def extract(corners, new_corners, img, maxWidth, maxHeight):
     H = cv2.getPerspectiveTransform(np.float32(corners), np.float32(new_corners)) #Did I do this in the right order? HbA, how do you align?
-    H = np.linalg.inv(H) #is this right
+    H = np.linalg.inv(H) #is this right THIS IS GROUND TRUTH
     out = cv2.warpPerspective(img,H,(maxWidth, maxHeight),flags=cv2.INTER_LINEAR)
+
+    #widthA = np.sqrt(((new_corners[1][0] - new_corners[0][0]) ** 2) + ((new_corners[1][1] - new_corners[0][1]) ** 2)) 
+    #widthB = np.sqrt(((new_corners[3][0] - new_corners[2][0]) ** 2) + ((new_corners[3][1] - new_corners[2][1]) ** 2))
+
+    #heightA = np.sqrt(((tr[0] - br[0]) ** 2) + ((tr[1] - br[1]) ** 2))
+    #heightB = np.sqrt(((tl[0] - bl[0]) ** 2) + ((tl[1] - bl[1]) ** 2))
+
+
+
+
+    #extract from original image patch A with corners
+
+    print("EXTRACT")
+    print("size ", corners[1][0] - corners[0][0])
+    print("height ", corners[0][1] - corners[2][1])
+    patcha  = [[0 for c in range(100)] for r in range(100)]
+    patchb = [[0 for c in range(100)] for r in range(100)]
+    for i in range(corners[1][0] - corners[0][0]): #x
+        for j in range(corners[2][1] - corners[0][1]): #y
+            patcha[i][j] = img[i+100][j+100]
+            print("a ", patcha[i][j])
+
+    patcha = np.array(patcha)
+
+
+
+    together = [[0 for c in range(100)] for r in range(100)]
+    cv2.imwrite("patcha.png", patcha)
+    for i in range(corners[1][0] - corners[0][0]): #x
+        for j in range(corners[2][1] - corners[0][1]): #y
+            patchb[i][j] = out[i+100][j+100]
+            both = [patcha[i][j], patchb[i][j]]
+            together[i][j] = both
+
+            print("b ", patchb[i][j])
+
+
+
+    print("STACKED")
+    print(together)
+
+
+
+    patchb = np.array(patchb)
+
+
+
+
+
+    
+    cv2.imwrite("patchb.png", patchb)
+
+
+
+
+
+
+
+
+
+
+
+
+    
+    #extract from warped image patch B with corners
+
+    patcha = new_corners
     return out
 
 
@@ -139,7 +206,6 @@ def newCorners(corners, img):
     newcorners = []
 
     for coor in corners:
-
 
         newx = random.randint(coor[0] - 20, coor[0] + 20)
         newy = random.randint(coor[1] - 20, coor[1] + 20)
