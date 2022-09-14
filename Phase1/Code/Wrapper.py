@@ -259,46 +259,40 @@ def RANSAC(matches):
 	N = 500
 	bestcount = 0
 	bestmatches = []
+	threshold = 9
 
 
 	for i in N:
+
 		pair1, pair2 = randompairs(matches)
 		H = homography(pair1, pair2)
+		fordot = np.concatenate((pair1, np.ones((pair1.shape[0], 1))), axis = 1 )
+		img2_new = np.dot(H, fordot.T )
+
+		img2_new[-1, :] = img2_new[-1, :] + 0.000001
+		img2_new = img2_new / (img2_new[-1 :])
+		img2_new = img2_new.T
 
 
-
-		Himg1 = H * img1 #apply to matches of image 1 or all of image 1?
-		threshold = 3
-		best = []
-
-		count = 0
-		allinliers
+		x = img2_new[:, 1]
+		y = img2_new[:, 0]
 
 
-
-		for match in matches_img1:
-			#match is an x and y coordinate
-
-			img_1_val = Himg1[match[0]][match[1]]
-			img_2_val = img2[match[0]][match[1]]
+		img2_new = np.stack((y,x), axis = -1)
+		ssd = np.sum(((pair2 - img2_new)**2), axis = 1) 
 
 
+		inliner = np.where(ssd < threshold)
+
+		if(len(inliner[0]) > bestcount or bestcount ==0 ):
+
+			bestcount = len(inliner[0])
+
+			bestmatches_img1 = pair1[inliner]
+			bestmatches_img2 = pair2[inliner]
 
 
-			s = np.sum((img_2_val - img_1_val)**2) #???
-
-			if s < threshold:
-				#inlier
-				count += 1
-				allinliers.append([match[0], match[1]])
-
-
-
-		if(count > bestcount):
-			bestcount = count 
-			bestmatches = allinliers
-
-	return allinliers #coordinates of the best matches 
+	return bestmatches_img1, bestmatches_img2
 
 
 
