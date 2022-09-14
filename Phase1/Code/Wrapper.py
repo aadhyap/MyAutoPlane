@@ -39,56 +39,39 @@ def main():
     img3 = cv2.imread('../Data/Train/Set1/3.jpg')
 
     img1_gray = cv2.cvtColor(img1, cv2.COLOR_BGR2GRAY)
-    img1_gray = np.float32(img1_gray)
-
     img2_gray = cv2.cvtColor(img2, cv2.COLOR_BGR2GRAY)
+    img1_gray = np.float32(img1_gray)
     img2_gray = np.float32(img2_gray)
 
     """
     Corner Detection
     Save Corner detection output as corners.png
     """
-    corners1 = CornerDetection(img1_gray)
-    corners2 = CornerDetection(img2_gray)
+    corners1 = CornerDetection(img1, img1_gray, 'corners1.png')
+    # print('Corners1', corners1)
+    # print('corners1Shape', corners1.shape)
+    corners2 = CornerDetection(img2, img2_gray, 'corners2.png')
     """
     Perform ANMS: Adaptive Non-Maximal Suppression
     Save ANMS output as anms.png
     """
-    best1 = ANMS(corners1)
-    best2 = ANMS(corners2)
-
-
-    'What is happening here'
-    for point in best1:
-        # print('enter i best')
-        x = point[0]
-        # print('x', x)
-        y = point[1]
-        # print('y', y)
-        r = point[2]
-        # print('r', r)
-
-        img1[x][y] = [0, 0, 255]
-        # print('img1[x][y]', img1[x][y])
-        # print('best after', best1)
-        # print('best after length', len(best1))
-
-    cv2.imwrite("Nbestnumpoints.png", img1)
+    best1 = ANMS(corners1, img1, 'anms1.png')
+    best2 = ANMS(corners2, img2, 'anms2.png')
 
     """
     Feature Descriptors
     Save Feature Descriptor output as FD.png
     """
-    best1_array = np.array(best1)
-    best2_array = np.array(best2)
-    best1_array = np.delete(best1_array, 2, 1)
-    best2_array = np.delete(best2_array, 2, 1)
+    best1 = np.array(best1)
+    best2 = np.array(best2)
+    best1= np.delete(best1, 2, 1)
+    best2 = np.delete(best2, 2, 1)
     patch_size = 40
     feat_desc = np.array(np.zeros((int((patch_size / 5) ** 2), 1)))
     epsilon = 10e-10
 
-    feature1 = featuredescription(img1_gray, patch_size, best1_array, epsilon, feat_desc)
-    feature2 = featuredescription(img2_gray, patch_size, best2_array, epsilon, feat_desc)
+    feature1 = featuredescription(img1_gray, patch_size, best1, epsilon, feat_desc)
+    feature2 = featuredescription(img2_gray, patch_size, best2, epsilon, feat_desc)
 
     """
     Feature Matching
@@ -96,29 +79,30 @@ def main():
     """
     ratioFM = 0.99
 
-    newim = featureMatching(img1, img2, feature1, feature2, best1_array, best2_array, ratioFM, epsilon)
+    newim = featureMatching(img1, img2, feature1, feature2, best1, best2, ratioFM, epsilon)
     #cor1, cor2 = featureMatching(feature1, feature2, best1_array, best2_array, ratioFM, epsilon)
 
 
-def CornerDetection(image):
+def CornerDetection(ori_image, gray_image, output_name):
 
     print('Called Corner Detection')
-    dst = cv2.cornerHarris(image, 2, 3, 0.04)
-    # print('output corner Harris', dst)
+    dst = cv2.cornerHarris(gray_image, 2, 3, 0.04)
+    dst = cv2.dilate(dst, None)
 
-    return cv2.dilate(dst, None)
-    # print('output dilate', dst)
+    ori_image[dst > 0.01 * dst.max()]=[0, 0, 255]
+    cv2.imwrite(output_name, ori_image)
 
+    return dst
 
-def ANMS(cornerScoreImage):
+def ANMS(cornerScoreImage, image, imagename):
     print("Called ANMS")
 
     radius = np.inf
     distance = np.inf
-    size = len(cornerScoreImage)
     all_r = []
-
     strong = []
+    size = len(cornerScoreImage)
+
     for i in range(size):
         for j in range(size):
             # peak local max
@@ -154,22 +138,38 @@ def ANMS(cornerScoreImage):
 
     all_r.sort(key=lambda x: x[2], reverse=True)
     # print('allr', all_r[:100])
+
+    for point in all_r[:100]:
+        # print('enter i best')
+        x = point[0]
+        # print('x', x)
+        y = point[1]
+        # print('y', y)
+        r = point[2]
+        # print('r', r)
+
+        image[x][y] = [0, 0, 255]
+        # print('img1[x][y]', img1[x][y])
+        # print('best after', best1)
+        # print('best after length', len(best1))
+
+    cv2.imwrite(imagename, image)
+
     return all_r[:100]
 
 def featuredescription(image, patch_size, anmsPos, epsilon, feat_desc):
     print('Called Feature Description')
 
     r, c = anmsPos.shape  # Size of the ANMS
-    img_pad = np.pad(image, 50, 'constant',
+    img_pad = np.pad(image, patch_size, 'constant',
                      constant_values=0)  # add a border around image for patching, zero to add black countering
-    cv2.imwrite('imagepad.png', img_pad)
+    # cv2.imwrite('imagepad.png', img_pad)
 
     for i in range(r):
         patch_center = anmsPos[i]
         patch_x = abs(int(patch_center[0] - patch_size / 2))
         patch_y = abs(int(patch_center[1] - patch_size / 2))
         #ac print('y', patch_y) # Here there is a problem with the axis Y for image 2 when the value is less than 20.
-
         patch = img_pad[patch_x:patch_x + patch_size, patch_y:patch_y + patch_size]
 
         # Apply Gauss blur
@@ -177,7 +177,7 @@ def featuredescription(image, patch_size, anmsPos, epsilon, feat_desc):
 
         # Sub-sample to 8x8
         sub_sample = blur_patch[::5, ::5]
-        # cv2.imwrite('patch' + str(i) + '.png', sub_sample)
+        cv2.imwrite('patch' + str(i) + '.png', sub_sample)
 
         # Re-sahpe to 64x1
         feats = sub_sample.reshape(int((patch_size / 5) ** 2), 1)
@@ -187,11 +187,9 @@ def featuredescription(image, patch_size, anmsPos, epsilon, feat_desc):
 
         # Make the variance 1
         feats = feats / (np.std(feats) + epsilon)
-        # cv2.imwrite('feature_vector' + str(i) + '.png', feats)
+        cv2.imwrite('feature_vector' + str(i) + '.png', feats)
 
         feat_desc = np.dstack((feat_desc, feats))
-
-    print('end features descrip')
 
     return feat_desc[:, :, 1:]
 
@@ -228,12 +226,6 @@ def featureMatching(img1, img2, featv1, featv2, best_corners1, best_corners2, ra
     print('matc1shape', matchpair_img1.shape)
     print('matc2shape', matchpair_img2.shape)
 
-    # matchpair = np.delete(matchpair, 2, 1)
-    # print('matchpair1 array', matchpair_img1)
-    # print('match size', matchpair_img1.shape)
-    # print('matchpair1 array', matchpair_img2)
-    # print('match size', matchpair_img2.shape)
-
     # ploting the points in the image
     newImageshape = (max(img1.shape[0], img2.shape[0]), img1.shape[1]+img2.shape[1], img1.shape[2])
     newImage = np.zeros(newImageshape, type(img1.flat[0]))
@@ -241,7 +233,7 @@ def featureMatching(img1, img2, featv1, featv2, best_corners1, best_corners2, ra
     newImage[0:img2.shape[0], img1.shape[1]:img1.shape[1]+img2.shape[1]] = img2
 
     for i in range(len(matchpair_img1)):
-        print('enter i drwa', i)
+        print('enter i draw', i)
         x1, y1 = matchpair_img1[i]
         x2, y2 = matchpair_img2[i]
         x2 = x2 + img1.shape[1]
