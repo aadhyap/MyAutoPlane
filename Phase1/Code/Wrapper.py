@@ -337,8 +337,7 @@ def homography(img1_kp, img2_kp):
 
 
 	H = cv2.getPerspectiveTransform(np.float32(corners), np.float32(new_corners)) 
-    H = np.linalg.inv(H) #is this right
-
+  
 	return H
 
 	#Do we transpose H?
