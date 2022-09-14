@@ -292,7 +292,11 @@ def RANSAC(matches):
 			bestmatches_img2 = pair2[inliner]
 
 
-	return bestmatches_img1, bestmatches_img2
+
+
+		
+
+		return bestmatches_img1, bestmatches_img2 #coordinates of the best matches 
 
 
 
