@@ -87,8 +87,6 @@ def main():
     Save Feature Descriptor output as FD.png
     """
     best1_array = np.array(best1)
-    # print('best1', best1_array)
-    # print('shape', best1_array.shape)
     best2_array = np.array(best2)
     best1_array = np.delete(best1_array, 2, 1)
     best2_array = np.delete(best2_array, 2, 1)
@@ -97,48 +95,23 @@ def main():
     patch_size = 40
     feat_desc = np.array(np.zeros((int((patch_size / 5) ** 2), 1)))
     epsilon = 10e-10
-    ratioFmatch = 0.99
+
 
     feature1 = featuredescription(img1_gray, patch_size, best1_array, epsilon, feat_desc)
     feature2 = featuredescription(img2_gray, patch_size, best2_array, epsilon, feat_desc)
     # print('featurev1', feature1)
     # print('featurev1shape', feature1.shape)
-    print('featurev2', feature2)
-    print('featurev2shape', feature2.shape)
+    # print('featurev2', feature2)
+    # print('featurev2shape', feature2.shape)
 
-    ssd = []
-    matchpair = []
-
-    r, c, s = feature1.shape
-    h, v, d = feature2.shape
-
-    for i in range(s):
-        print('feature in the for loop', i)
-        ssd = []
-        for j in range(d):
-            ssd.append(sum(pow(feature1[:, :, i] - feature2[:, :, j], 2)))
-        indices, ssdsorted = zip(*sorted(enumerate(ssd), key=itemgetter(1)))
-        ratio = ssdsorted[0] / ssdsorted[1]
-        # print('ratio', ratio)
-        print('ssd, indx, sorted', ssd, ssdsorted, indices)
-        if ratio < ratioFmatch:
-            matchpair.append(best2_array[indices[0]])
-            print('matchpair', matchpair)
-    # matchpair = np.stack((matchpair1,matchpair2), axis=1)
-
-    print('match pair final', matchpair)
-    matchpair = np.array(matchpair)
-    #matchpair = np.delete(matchpair, 2, 1)
-    print('matchpair array', matchpair)
-    print('match size', matchpair.shape)
-
-    # idea to get the confidents features on 2 for each index that I have.
-    # continue here
+    """
+    Feature Matching
+    Save Feature Matching output as matching.png
+    """
+    ratioFM = 0.99
 
 
 
-    imgmatch = cv2.drawMatches(img1, best1_array,img2, best2_array, matchpair, None,flags=1)
-    cv2.imwrite('matchpic.png', imgmatch)
 
 
 
@@ -269,10 +242,38 @@ def featuredescription(image, patch_size, anmsPos, epsilon, feat_desc):
 
     return feat_desc[:, :, 1:]
 
-def featureMatching(featv1, featv2, ):
+def featureMatching(featv1, featv2, best_corners1, best_corners2, ratioFM, epsilon):
+    print('Called Feature Matching')
+    matchpair_img1 = []
+    matchpair_img2 = []
 
-    """
-    """
+    r, c, s = featv1.shape
+    h, v, d = featv2.shape
+
+    for i in range(s):
+        # print('feature in the for loop', i)
+        ssd = []
+        for j in range(d):
+            ssd.append(sum(pow(featv1[:, :, i] - featv2[:, :, j], 2)))
+        indices, ssdsorted = zip(*sorted(enumerate(ssd), key=itemgetter(1)))
+        ratio = ssdsorted[0] / (ssdsorted[1] + epsilon)
+        # print('ratio', ratio)
+        # print('ssd, indx, sorted', ssd, ssdsorted, indices)
+        if ratio < ratioFM:
+            matchpair_img1.append(best_corners1[indices[0]])
+            matchpair_img2.append(best_corners2[indices[0]])
+            # print('matchpair1', matchpair_img1)
+            # print('matchpair2', matchpair_img2)
+    # print('match pair final1', matchpair_img1)
+    # print('match pair final2', matchpair_img2)
+    matchpair_img1 = np.array(matchpair_img1)
+    matchpair_img2 = np.array(matchpair_img2)
+    # matchpair = np.delete(matchpair, 2, 1)
+    # print('matchpair1 array', matchpair_img1)
+    # print('match size', matchpair_img1.shape)
+    # print('matchpair1 array', matchpair_img2)
+    # print('match size', matchpair_img2.shape)
+    return matchpair_img1, matchpair_img2
 
 if __name__ == "__main__":
     main()
