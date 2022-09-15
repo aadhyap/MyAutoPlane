@@ -73,35 +73,51 @@ def featuredescription(image, patch_size, anmsPos, epsilon, feat_desc):
     return feat_desc[:, :, 1:]
 
 
-def imageResize(w, h):
-    img1 = cv2.imread('../Data/Train/169.jpg')
-    img1_gray = cv2.cvtColor(img1, cv2.COLOR_BGR2GRAY)
+def imageResize(image, w, h):
+    #img1 = cv2.imread('../Data/Train/169.jpg')
+    #img1 = cv2.imread(image)
+    img1_gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
     width = int(w)
     height = int(h)
     dim = (width, height)
     # resize image
     resized = cv2.resize(img1_gray, dim, interpolation = cv2.INTER_AREA)
-    cv2.imwrite("imageResize.png", resized)
     return resized
 
 def main():
 
+    i = 0 
+    iterateImages()
+
+
+
+
+
+def iterateImages():
+    #img3 = cv2.imread('/TxtFiles/Train/Set1/3.jpg')
+    file1 = open('TxtFiles/DirNamesTrain.txt', 'r')
+    Lines = file1.readlines()
+    count = 1
+
+    for line in Lines:
+
+        if(count == 10):
+            break
+
+        l = line.strip()
+        path = cv2.imread('../Data/' + l + ".jpg")
+        supervised(path, count)
+        count += 1
+
+
+def supervised(image, count):
     width, height = 600, 600
     
 
-    img1 = imageResize(width, height)
-    print("IMAGE 1")
-    print(img1)
+    img1 = imageResize(image, width, height)
+
     #cv2.imwrite("4corners.png", img1)
 
-
-
-    
-
-    patch_size = 40
-    feat_desc = np.array(np.zeros((int((patch_size / 5) ** 2), 1)))
-    epsilon = 10e-10
-    ratioFmatch = 0.99
 
     corners = [[100, 100], [200, 100], [100, 200], [200, 200]]
     '''img1[100][100] = [0,0,255] 
@@ -109,25 +125,29 @@ def main():
     img1[100][200]= [0,0,255] 
     img1[200][200] = [0,0,255] '''
 
-    cv2.circle(img1, (100,100) , 10, (0,0,255) , 2) #bottom left
-    cv2.circle(img1, (200,100) , 10, (0,0,255) , 2) #bottom right
-    cv2.circle(img1, (100,200) , 10, (0,0,255) , 2)# top left
-    cv2.circle(img1, (200,200) , 10, (0,0,255) , 2) #top right
-    cv2.imwrite("4corners.png", img1)
+    #cv2.circle(img1, (100,100) , 10, (0,0,255) , 2) #bottom left
+    #cv2.circle(img1, (200,100) , 10, (0,0,255) , 2) #bottom right
+    #cv2.circle(img1, (100,200) , 10, (0,0,255) , 2)# top left
+    #cv2.circle(img1, (200,200) , 10, (0,0,255) , 2) #top right
+    #cv2.imwrite("./alldata/4corners" + str(count) + ".png", img1)
 
 
     new_corners, img2= newCorners(corners, img1)
 
 
 
-    cv2.imwrite("newcorners.png", img2)
+    #cv2.imwrite("newcorners.png", img2)
 
-    warped = extract(corners, new_corners, img2, width, height)
-    cv2.imwrite("warped.png", warped)
+    warped = extract(corners, new_corners, img2, width, height, count)
+    #cv2.imwrite("./alldata/warped"+ str(count)+ ".png", warped)
+
+
+#def supervised():
 
 
 
-def extract(corners, new_corners, img, maxWidth, maxHeight):
+
+def extract(corners, new_corners, img, maxWidth, maxHeight, count):
     H = cv2.getPerspectiveTransform(np.float32(corners), np.float32(new_corners)) #Did I do this in the right order? HbA, how do you align?
     H = np.linalg.inv(H) #is this right THIS IS GROUND TRUTH
     out = cv2.warpPerspective(img,H,(maxWidth, maxHeight),flags=cv2.INTER_LINEAR)
@@ -139,66 +159,74 @@ def extract(corners, new_corners, img, maxWidth, maxHeight):
     #heightB = np.sqrt(((tl[0] - bl[0]) ** 2) + ((tl[1] - bl[1]) ** 2))
 
 
-
-
     #extract from original image patch A with corners
 
-    print("EXTRACT")
-    print("size ", corners[1][0] - corners[0][0])
-    print("height ", corners[0][1] - corners[2][1])
+    groundTruth(corners, new_corners)
     patcha  = [[0 for c in range(100)] for r in range(100)]
     patchb = [[0 for c in range(100)] for r in range(100)]
     for i in range(corners[1][0] - corners[0][0]): #x
         for j in range(corners[2][1] - corners[0][1]): #y
             patcha[i][j] = img[i+100][j+100]
-            print("a ", patcha[i][j])
+  
 
     patcha = np.array(patcha)
 
 
 
-    together = [[0 for c in range(100)] for r in range(100)]
-    cv2.imwrite("patcha.png", patcha)
+
+
+
+    #cv2.imwrite("./alldata/patcha" +  str(count) + ".png",  patcha)
     for i in range(corners[1][0] - corners[0][0]): #x
         for j in range(corners[2][1] - corners[0][1]): #y
             patchb[i][j] = out[i+100][j+100]
-            both = [patcha[i][j], patchb[i][j]]
-            together[i][j] = both
 
-            print("b ", patchb[i][j])
+        
 
-
-
-    print("STACKED")
-    print(together)
 
 
 
     patchb = np.array(patchb)
 
 
-
-
-
+    together = np.dstack((patcha,patchb))
+    #Stacked
     
-    cv2.imwrite("patchb.png", patchb)
-
-
-
-
-
-
-
 
 
 
 
 
     
-    #extract from warped image patch B with corners
-
-    patcha = new_corners
+    cv2.imwrite("./alldata/patchb" + str(count) + ".png", patchb)
     return out
+
+
+
+
+def groundTruth(corners, new_corners):
+
+  
+    blx = new_corners[0][0] - corners[0][0]
+    bly = new_corners[0][1] - corners[0][1]
+    bl = [blx, bly]
+
+    brx = new_corners[1][0] - corners[1][0]
+    bry = new_corners[1][1] - corners[1][1]
+    br = [brx, bry]
+
+    tlx = new_corners[2][0] - corners[2][0]
+    tly = new_corners[2][1] - corners[2][1]
+    tl = [tlx, tly]
+
+    tRx = new_corners[3][0] - corners[3][0]
+    tRy = new_corners[3][1] - corners[3][1]
+    tR = [tRx, tRy]
+
+    gradientTruth = [bl, br, tl, tR]
+
+
+    return gradientTruth
 
 
 
@@ -211,8 +239,9 @@ def newCorners(corners, img):
         newy = random.randint(coor[1] - 20, coor[1] + 20)
         newcorners.append([newx, newy])
         cv2.circle(img, (newx,newy) , 10, (255,0,0) , 2)
-    print("CORNERS")
-    print(newcorners)
+  
+
+
     return newcorners, img
 
 
