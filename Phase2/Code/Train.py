@@ -47,6 +47,7 @@ import string
 from termcolor import colored, cprint
 import math as m
 from tqdm import tqdm
+import Wrapper
 
 
 def GenerateBatch(BasePath, DirNamesTrain, TrainCoordinates, ImageSize, MiniBatchSize):
@@ -136,10 +137,12 @@ def TrainOperation(
     # Predict output with forward pass
     model = HomographyModel()
 
+
+
     ###############################################
     # Fill your optimizer of choice here!
     ###############################################
-    Optimizer = ...
+    Optimizer = ... #stochastic optimizer dont touch checkpoint stuff
 
     # Tensorboard
     # Create a summary to monitor loss tensor
@@ -159,8 +162,8 @@ def TrainOperation(
         NumIterationsPerEpoch = int(NumTrainSamples / MiniBatchSize / DivTrain)
         for PerEpochCounter in tqdm(range(NumIterationsPerEpoch)):
             I1Batch, CoordinatesBatch = GenerateBatch(
-                BasePath, DirNamesTrain, TrainCoordinates, ImageSize, MiniBatchSize
-            )
+                BasePath, DirNamesTrain, TrainCoordinates, ImageSize, MiniBatchSize #Traincoordinates is labels, coordinates is always labels
+            ) #it I1batch format N X C X H x W, N minibatchsize, c # of channels, (Hx w, 128 x 128) (mini batch is 50 x 8 x 1)
 
             # Predict output with forward pass
             PredicatedCoordinatesBatch = model(I1Batch)
@@ -168,7 +171,7 @@ def TrainOperation(
 
             Optimizer.zero_grad()
             LossThisBatch.backward()
-            Optimizer.step()
+            Optimizer.step() 
 
             # Save checkpoint every some SaveCheckPoint's iterations
             if PerEpochCounter % SaveCheckPoint == 0:
@@ -194,13 +197,13 @@ def TrainOperation(
 
             result = model.validation_step(Batch)
             # Tensorboard
-            Writer.add_scalar(
-                "LossEveryIter",
-                result["val_loss"],
-                Epochs * NumIterationsPerEpoch + PerEpochCounter,
-            )
+            #Writer.add_scalar(
+                #"LossEveryIter",
+                #result["val_loss"],
+                #Epochs * NumIterationsPerEpoch + PerEpochCounter,
+            #)
             # If you don't flush the tensorboard doesn't update until a lot of iterations!
-            Writer.flush()
+            #Writer.flush()
 
         # Save model every epoch
         SaveName = CheckPointPath + str(Epochs) + "model.ckpt"
