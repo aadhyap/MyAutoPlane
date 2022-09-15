@@ -101,8 +101,6 @@ def iterateImages():
 
     for line in Lines:
 
-        if(count == 10):
-            break
 
         l = line.strip()
         path = cv2.imread('../Data/' + l + ".jpg")
@@ -198,8 +196,11 @@ def extract(corners, new_corners, img, maxWidth, maxHeight, count):
 
 
     
-    cv2.imwrite("./alldata/patchb" + str(count) + ".png", patchb)
-    return out
+    #cv2.imwrite("./alldata/patchb" + str(count) + ".png", patchb)
+
+    with open("./alldata/test" + str(count) +  ".npy", 'wb') as f:
+        np.save(f, together)
+    return together
 
 
 
