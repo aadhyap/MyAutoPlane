@@ -87,7 +87,7 @@ def imageResize(image, w, h):
 def main():
 
     i = 0 
-    iterateImages()
+    #iterateImages() #used to generate arrays and create labesl
 
 
 
@@ -99,13 +99,25 @@ def iterateImages():
     Lines = file1.readlines()
     count = 1
 
-    for line in Lines:
+    with open('./TxtFiles/LabelsTrain.txt', 'w') as f:
+        for line in Lines:
 
 
-        l = line.strip()
-        path = cv2.imread('../Data/' + l + ".jpg")
-        supervised(path, count)
-        count += 1
+            l = line.strip()
+            path = cv2.imread('../Data/' + l + ".jpg")
+            groundtruth = supervised(path, count)
+            count += 1
+
+            groundtruth= str(groundtruth)[1 : -1]
+
+            f.write(str(groundtruth))
+
+
+            f.write('\n')
+
+    f.close()
+
+        
 
 
 def supervised(image, count):
@@ -117,7 +129,7 @@ def supervised(image, count):
     #cv2.imwrite("4corners.png", img1)
 
 
-    corners = [[100, 100], [200, 100], [100, 200], [200, 200]]
+    corners = [[128, 128], [256, 128], [128, 256], [256, 256]]
     '''img1[100][100] = [0,0,255] 
     img1[200][100] = [0,0,255] 
     img1[100][200]= [0,0,255] 
@@ -136,7 +148,9 @@ def supervised(image, count):
 
     #cv2.imwrite("newcorners.png", img2)
 
-    warped = extract(corners, new_corners, img2, width, height, count)
+    groundTruth = extract(corners, new_corners, img2, width, height, count)
+
+    return groundTruth
     #cv2.imwrite("./alldata/warped"+ str(count)+ ".png", warped)
 
 
@@ -159,12 +173,12 @@ def extract(corners, new_corners, img, maxWidth, maxHeight, count):
 
     #extract from original image patch A with corners
 
-    groundTruth(corners, new_corners)
-    patcha  = [[0 for c in range(100)] for r in range(100)]
-    patchb = [[0 for c in range(100)] for r in range(100)]
+    gt = groundTruth(corners, new_corners)
+    patcha  = [[0 for c in range(128)] for r in range(128)]
+    patchb = [[0 for c in range(128)] for r in range(128)]
     for i in range(corners[1][0] - corners[0][0]): #x
         for j in range(corners[2][1] - corners[0][1]): #y
-            patcha[i][j] = img[i+100][j+100]
+            patcha[i][j] = img[i+128][j+128]
   
 
     patcha = np.array(patcha)
@@ -177,7 +191,7 @@ def extract(corners, new_corners, img, maxWidth, maxHeight, count):
     #cv2.imwrite("./alldata/patcha" +  str(count) + ".png",  patcha)
     for i in range(corners[1][0] - corners[0][0]): #x
         for j in range(corners[2][1] - corners[0][1]): #y
-            patchb[i][j] = out[i+100][j+100]
+            patchb[i][j] = out[i+128][j+128]
 
         
 
@@ -189,6 +203,8 @@ def extract(corners, new_corners, img, maxWidth, maxHeight, count):
 
     together = np.dstack((patcha,patchb))
     #Stacked
+
+
     
 
 
@@ -200,7 +216,7 @@ def extract(corners, new_corners, img, maxWidth, maxHeight, count):
 
     with open("./alldata/test" + str(count) +  ".npy", 'wb') as f:
         np.save(f, together)
-    return together
+    return gt
 
 
 
@@ -210,21 +226,22 @@ def groundTruth(corners, new_corners):
   
     blx = new_corners[0][0] - corners[0][0]
     bly = new_corners[0][1] - corners[0][1]
-    bl = [blx, bly]
+    #bl = [blx, bly]
 
     brx = new_corners[1][0] - corners[1][0]
     bry = new_corners[1][1] - corners[1][1]
-    br = [brx, bry]
+    #br = [brx, bry]
 
     tlx = new_corners[2][0] - corners[2][0]
     tly = new_corners[2][1] - corners[2][1]
-    tl = [tlx, tly]
+    #tl = [tlx, tly]
 
     tRx = new_corners[3][0] - corners[3][0]
     tRy = new_corners[3][1] - corners[3][1]
-    tR = [tRx, tRy]
+    #tR = [tRx, tRy]
 
-    gradientTruth = [bl, br, tl, tR]
+    gradientTruth = [blx, bly, brx, bry, tlx, tly, tRx, tRy]
+
 
 
     return gradientTruth
