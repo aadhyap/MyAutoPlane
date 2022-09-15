@@ -20,8 +20,6 @@ from operator import itemgetter
 
 
 # Add any python libraries here
-
-
 def main():
     # Add any Command Line arguments here
     # Parser = argparse.ArgumentParser()
@@ -109,8 +107,37 @@ def main():
 
     ratioFM = 0.99
 
-    newim = featureMatching(img1, img2, 'matching.png', feature1, feature2, best1, best2, ratioFM, epsilon)
-    #cor1, cor2 = featureMatching(feature1, feature2, best1_array, best2_array, ratioFM, epsilon)
+    cor1, cor2 = featureMatching(img1, img2, 'matching.png', feature1, feature2, best1, best2, ratioFM, epsilon)
+
+    """
+    Refine: RANSAC, Estimate Homography
+    """
+
+    img1 = cv2.imread('../Data/Train/Set1/1.jpg')
+    img2 = cv2.imread('../Data/Train/Set1/2.jpg')
+    img3 = cv2.imread('../Data/Train/Set1/3.jpg')
+
+    img1_gray = cv2.cvtColor(img1, cv2.COLOR_BGR2GRAY)
+    img2_gray = cv2.cvtColor(img2, cv2.COLOR_BGR2GRAY)
+    img1_gray = np.float32(img1_gray)
+    img2_gray = np.float32(img2_gray)
+
+    #rac1, rac2 = RANSAC(cor1, cor2)
+    Ho = RANSAC(cor1, cor2)
+    print('Hf', Ho)
+    #print('pair1', rac1)
+    #print('pair2', rac2)
+
+
+
+    """
+    Image Warping + Blending
+    Save Panorama output as mypano.png
+    """
+
+
+
+
 
 
 def CornerDetection(ori_image, gray_image, output_name):
@@ -119,7 +146,6 @@ def CornerDetection(ori_image, gray_image, output_name):
 
     dst = cv2.cornerHarris(gray_image, 2, 3, 0.04)
     dst = cv2.dilate(dst, None)
-    # print('dstinfun', dst)
 
     ori_image[dst > 0.01 * dst.max()]=[0, 0, 255]
     cv2.imwrite(output_name, ori_image)
@@ -138,7 +164,6 @@ def ANMS(cornerScoreImage, ori_image, imagename):
 
     for i in range(size):
         for j in range(size):
-            # peak local max
             if (cornerScoreImage[i][j] > 0.01 * cornerScoreImage.max()):  # set everything lower than threshold to 0
                 corner = [i, j, cornerScoreImage[i][j]]
                 strong.append(corner)
@@ -164,20 +189,15 @@ def ANMS(cornerScoreImage, ori_image, imagename):
                     radius[n] = distance
         coor = [x, y, radius[n]]
         all_r.append(coor)
-
     all_r.sort(key=lambda x: x[2], reverse=True)
     best = all_r[:100]
     best = np.array(best)
-    # print('ANMSinfun', best)
-    # print('ANMSshapeinfun', best.shape)
+
     for point in range(len(best)):
-        # print('enter i best')
+
         x = best[point][0]
-        # print('x', x)
         y = best[point][1]
-        # print('y', y)
         r = best[point][2]
-        # print('r', r)
         finalimage = cv2.circle(ori_image, (x, y), 3, 255, -1)
 
     cv2.imwrite(imagename, finalimage)
@@ -190,7 +210,6 @@ def featuredescription(image, patch_size, anmsPos, epsilon, feat_desc):
     r, c = anmsPos.shape  # Size of the ANMS
     img_pad = np.pad(image, patch_size, 'constant',
                      constant_values=0)  # add a border around image for patching, zero to add black countering
-    # cv2.imwrite('imagepad.png', img_pad)
 
     for i in range(r):
         patch_center = anmsPos[i]
@@ -229,29 +248,18 @@ def featureMatching(img1, img2, imagename, featv1, featv2, best_corners1, best_c
     h, v, d = featv2.shape
 
     for i in range(s):
-        # print('feature in the for loop', i)
         ssd = []
         for j in range(d):
             ssd.append(sum(pow(featv1[:, :, i] - featv2[:, :, j], 2)))
         indices, ssdsorted = zip(*sorted(enumerate(ssd), key=itemgetter(1)))
         ratio = ssdsorted[0] / (ssdsorted[1] + epsilon)
-        # print('ratio', ratio)
-        # print('ssd, indx, sorted', ssd, ssdsorted, indices)
+
         if ratio < ratioFM:
             matchpair_img1.append(best_corners1[indices[0]])
             matchpair_img2.append(best_corners2[indices[0]])
-            # print('matchpair1', matchpair_img1)
-            # print('matchpair2', matchpair_img2)
-    # print('match pair final1', matchpair_img1)
-    # print('match pair final2', matchpair_img2)
+
     matchpair_img1 = np.array(matchpair_img1)
     matchpair_img2 = np.array(matchpair_img2)
-    # print('matc1', matchpair_img1)
-    # print('matc2', matchpair_img2)
-    # print('lenmatc1', len(matchpair_img1))
-    # print('lenmatc2', len(matchpair_img2))
-    # print('matc1shape', matchpair_img1.shape)
-    # print('matc2shape', matchpair_img2.shape)
 
     # ploting the points in the image
     newImageshape = (max(img1.shape[0], img2.shape[0]), img1.shape[1]+img2.shape[1], img1.shape[2])
@@ -260,17 +268,92 @@ def featureMatching(img1, img2, imagename, featv1, featv2, best_corners1, best_c
     newImage[0:img2.shape[0], img1.shape[1]:img1.shape[1]+img2.shape[1]] = img2
 
     for i in range(len(matchpair_img1)):
-        # print('enter i draw', i)
+
         x1, y1 = matchpair_img1[i]
         x2, y2 = matchpair_img2[i]
         x2 = x2 + img1.shape[1]
 
-        cv2.line(newImage, (x1, y1), (x2, y2), (0, 255, 255), 2)
         cv2.circle(newImage, (x1, y1), 3, 255, 1)
         cv2.circle(newImage, (x2, y2), 3, 255, 1)
+        cv2.line(newImage, (x1, y1), (x2, y2), (0, 255, 255), 2)
 
-    return cv2.imwrite(imagename, newImage)
+    cv2.imwrite(imagename, newImage)
+    return matchpair_img1, matchpair_img2
 
+def RANSAC(pair1, pair2):# parametes is all img1 points matches and img2point matches
+
+    print('Called RANSAC')
+    # pick rnadom x and y
+    n = len(pair1)
+    randomRow = np.random.randint(n, size=4)
+    randomPair1 = np.array([pair1[randomRow[0], :], pair1[randomRow[1], :], pair1[randomRow[2], :], pair1[randomRow[3], :]])
+    randomPair2 = np.array([pair2[randomRow[0], :], pair2[randomRow[1], :], pair2[randomRow[2], :], pair2[randomRow[3], :]])
+    # print('random1', randomPair1)
+    # print('random2', randomPair2)
+
+    H = homography(randomPair1, randomPair2)
+
+    return H
+''' bestcount = 0
+    bestmatches = []
+    threshold = 9
+
+
+    #for i in N:
+
+        # pair1, pair2 = randompairs(matches) #delete this line you don't need random pairs function. Uses img1points and img2points instead
+    H = homography(randomPair1, randomPair2)
+    fordot = np.concatenate((randomPair1, np.ones((randomPair1.shape[0], 1))), axis = 1 )
+    img2_new = np.dot(H, fordot.T )
+    img2_new[-1, :] = img2_new[-1, :] + 0.000001
+    img2_new = img2_new / (img2_new[-1 :])
+    img2_new = img2_new.T
+
+    x = img2_new[:, 1]
+    y = img2_new[:, 0]
+
+
+    img2_new = np.stack((y,x), axis = -1)
+    ssd = np.sum(((randomPair2 - img2_new)**2), axis = 1)
+
+    inliner = np.where(ssd < threshold)
+    if(len(inliner[0]) > bestcount or bestcount ==0 ):
+        bestcount = len(inliner[0])
+        bestmatches_img1 = randomPair1[inliner]
+        bestmatches_img2 = randomPair2[inliner]
+
+
+    return bestmatches_img1, bestmatches_img2 #coordinates of the best matches'''
+
+
+''' def randompairs(matches):
+
+    pairs = []
+    for i in range(4):
+        match = matches[i]
+        pairs.append(pairs)
+        img1 = []
+        img2 = []
+        for match in pairs:
+            img1.append(match[0])
+            img2.append(match[1])
+        return img1, img2'''
+
+#input: a list 4 selected random pairs for img1 and img2
+def homography(img1_kp, img2_kp):
+    print('called Homograhy')
+
+    corners = np.float32(img1_kp)
+    new_corners = np.float32(img2_kp)
+    print('ACornersHfloat', corners)
+    print('ANewCornersHfloat', new_corners)
+
+
+    matrix = cv2.getPerspectiveTransform(corners, new_corners)
+    print('matrix in homography', matrix)
+    # H = cv2.warpPerspective(H, (500, 600))
+    # H = np.linalg.inv(matrix) # is this right? why do you need the inverse?
+    return matrix
 
 
 if __name__ == "__main__":
