@@ -142,7 +142,9 @@ def TrainOperation(
     ###############################################
     # Fill your optimizer of choice here!
     ###############################################
-    Optimizer = ... #stochastic optimizer dont touch checkpoint stuff
+    Optimizer = torch.optim.SGD(model.parameters(), lr=1e-3)
+
+     #stochastic optimizer dont touch checkpoint stuff
 
     # Tensorboard
     # Create a summary to monitor loss tensor
