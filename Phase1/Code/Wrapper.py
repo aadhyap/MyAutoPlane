@@ -28,52 +28,59 @@ def main():
 
     # Args = Parser.parse_args()
     # NumFeatures = Args.NumFeatures
+    input_image1 = '../Data/Test/Test1/1.jpg'
+    input_image2 = '../Data/Test/Test1/2.jpg'
+    input_image3 = '../Data/Test/Test4/3.jpg'
+
+    output_folder = './Test1/'
+
 
     """
     Read a set of images for Panorama stitching
     """
 
-    img1 = cv2.imread('../Data/Train/Set1/1.jpg')
-    img2 = cv2.imread('../Data/Train/Set1/2.jpg')
-    img3 = cv2.imread('../Data/Train/Set1/3.jpg')
+    img1 = cv2.imread(input_image1)
+    img2 = cv2.imread(input_image2)
+    img3 = cv2.imread(input_image3)
 
     img1_gray = cv2.cvtColor(img1, cv2.COLOR_BGR2GRAY)
     img2_gray = cv2.cvtColor(img2, cv2.COLOR_BGR2GRAY)
     img1_gray = np.float32(img1_gray)
     img2_gray = np.float32(img2_gray)
 
+
     """
     Corner Detection
     Save Corner detection output as corners.png
     """
-    corners1 = CornerDetection(img1, img1_gray, 'orners1.png')
-    corners2 = CornerDetection(img2, img2_gray, 'corners2.png')
+    corners1 = CornerDetection(img1, img1_gray, output_folder+'corners1.png')
+    corners2 = CornerDetection(img2, img2_gray, output_folder+'corners2.png')
 
     """
     Perform ANMS: Adaptive Non-Maximal Suppression
     Save ANMS output as anms.png
     """
 
-    img1 = cv2.imread('../Data/Train/Set1/1.jpg')
-    img2 = cv2.imread('../Data/Train/Set1/2.jpg')
-    img3 = cv2.imread('../Data/Train/Set1/3.jpg')
+    img1 = cv2.imread(input_image1)
+    img2 = cv2.imread(input_image2)
+    img3 = cv2.imread(input_image3)
 
     img1_gray = cv2.cvtColor(img1, cv2.COLOR_BGR2GRAY)
     img2_gray = cv2.cvtColor(img2, cv2.COLOR_BGR2GRAY)
     img1_gray = np.float32(img1_gray)
     img2_gray = np.float32(img2_gray)
 
-    anms_corners_img1 = ANMS(corners1, 300, img1, img1_gray, 'anms1.png')
-    anms_corners_img2 = ANMS(corners2, 300, img2, img2_gray, 'anms2.png')
+    anms_corners_img1 = ANMS(corners1, 100, img1, img1_gray, output_folder+'anms1.png')
+    anms_corners_img2 = ANMS(corners2, 100, img2, img2_gray, output_folder+'anms2.png')
 
     """
     Feature Descriptors
     Save Feature Descriptor output as FD.png
     """
 
-    img1 = cv2.imread('../Data/Train/Set1/1.jpg')
-    img2 = cv2.imread('../Data/Train/Set1/2.jpg')
-    img3 = cv2.imread('../Data/Train/Set1/3.jpg')
+    img1 = cv2.imread(input_image1)
+    img2 = cv2.imread(input_image2)
+    img3 = cv2.imread(input_image3)
 
     img1_gray = cv2.cvtColor(img1, cv2.COLOR_BGR2GRAY)
     img2_gray = cv2.cvtColor(img2, cv2.COLOR_BGR2GRAY)
@@ -86,17 +93,17 @@ def main():
     feat_desc = np.array(np.zeros((int((patch_size / 5) ** 2), 1)))
     epsilon = 10e-10
 
-    feature1 = featuredescription(img1_gray, patch_size, anms_corners_img1, epsilon, feat_desc)
-    feature2 = featuredescription(img2_gray, patch_size, anms_corners_img2, epsilon, feat_desc)
+    feature1 = featuredescription(img1_gray, patch_size, anms_corners_img1, epsilon, feat_desc, 500)
+    feature2 = featuredescription(img2_gray, patch_size, anms_corners_img2, epsilon, feat_desc, 500)
 
     """
     Feature Matching
     Save Feature Matching output as matching.png
     """
 
-    img1 = cv2.imread('../Data/Train/Set1/1.jpg')
-    img2 = cv2.imread('../Data/Train/Set1/2.jpg')
-    img3 = cv2.imread('../Data/Train/Set1/3.jpg')
+    img1 = cv2.imread(input_image1)
+    img2 = cv2.imread(input_image2)
+    img3 = cv2.imread(input_image3)
 
     img1_gray = cv2.cvtColor(img1, cv2.COLOR_BGR2GRAY)
     img2_gray = cv2.cvtColor(img2, cv2.COLOR_BGR2GRAY)
@@ -105,22 +112,22 @@ def main():
 
     ratioFM = 0.7
 
-    cor1, cor2 = featureMatching(img1, img2, 'matching.png', feature1, feature2, anms_corners_img1, anms_corners_img2, ratioFM, epsilon)
+    cor1, cor2 = featureMatching(img1, img2, output_folder+'matching.png', feature1, feature2, anms_corners_img1, anms_corners_img2, ratioFM, epsilon)
 
     """
     Refine: RANSAC, Estimate Homography
     """
 
-    img1 = cv2.imread('../Data/Train/Set1/1.jpg')
-    img2 = cv2.imread('../Data/Train/Set1/2.jpg')
-    img3 = cv2.imread('../Data/Train/Set1/3.jpg')
+    img1 = cv2.imread(input_image1)
+    img2 = cv2.imread(input_image2)
+    img3 = cv2.imread(input_image3)
 
     img1_gray = cv2.cvtColor(img1, cv2.COLOR_BGR2GRAY)
     img2_gray = cv2.cvtColor(img2, cv2.COLOR_BGR2GRAY)
     img1_gray = np.float32(img1_gray)
     img2_gray = np.float32(img2_gray)
 
-    _,_,bestcorners1, bestcorners2 = RANSAC(cor1, cor2, img1, img2, 300, 'nransac.png')
+    pts_src, pts_dst, bestcorners1, bestcorners2 = RANSAC(cor1, cor2, img1, img2, 300, output_folder+'ransac.png')
     #Ho = RANSAC(cor1, cor2)
     #print('Hf', Ho)
     #print('pair1', rac1)
@@ -131,22 +138,21 @@ def main():
     Save Panorama output as mypano.png
     """
 
-    img1 = cv2.imread('../Data/Train/Set1/1.jpg')
-    img2 = cv2.imread('../Data/Train/Set1/2.jpg')
-    img3 = cv2.imread('../Data/Train/Set1/3.jpg')
+    img1 = cv2.imread(input_image1)
+    img2 = cv2.imread(input_image2)
+    img3 = cv2.imread(input_image3)
 
     img1_gray = cv2.cvtColor(img1, cv2.COLOR_BGR2GRAY)
     img2_gray = cv2.cvtColor(img2, cv2.COLOR_BGR2GRAY)
     img1_gray = np.float32(img1_gray)
     img2_gray = np.float32(img2_gray)
 
-    pts_src, pts_dst, _, _ = RANSAC(cor1, cor2, img1, img2, 300, 'ransac.png')
     h, status = cv2.findHomography(pts_src, pts_dst)
     im_out = cv2.warpPerspective(img1, h, (img2.shape[1], img2.shape[0]))
-    cv2.imshow("Source Image", img1)
-    cv2.imshow("Destination Image", img2)
-    cv2.imshow("Warped Source Image", im_out)
-    cv2.imwrite('Blending.png', im_out)
+    #cv2.imshow("Source Image", img1)
+    #cv2.imshow("Destination Image", img2)
+    #cv2.imshow("Warped Source Image", im_out)
+    cv2.imwrite(output_folder+'Blending.png', im_out)
     #cv2.waitKey(0)
 
 
@@ -155,12 +161,15 @@ def CornerDetection(ori_image, gray_image, output_name):
 
     print('Called Corner Detection')
 
-    corners = cv2.goodFeaturesToTrack(gray_image, 1000, 0.01, 10)
+    #corners = cv2.cornerHarris(gray_image,2,5,0.07)
+
+    corners = cv2.goodFeaturesToTrack(gray_image, 1000000000, 0.01, 10)
     corners = np.int0(corners)
-    #print('shape', corners.shape)
+
 
     for i in corners:
         x, y = i.ravel()
+
         cv2.circle(ori_image, (x, y), 3, (0,0,255), -1)
 
     cv2.imwrite(output_name, ori_image)
@@ -169,6 +178,7 @@ def CornerDetection(ori_image, gray_image, output_name):
 def ANMS(stron_corners, best_num_corners, ori_image, img_gray, imagename):
 
     print('Called ANMS')
+
     l, _, w = stron_corners.shape
     r = np.inf * np.ones(l)
     best_coordinates = []
@@ -189,10 +199,8 @@ def ANMS(stron_corners, best_num_corners, ori_image, img_gray, imagename):
             if ED < r[i]:
                 r[i] = ED
                 best_coordinates.append([xi, yi, r[i]])
-    #print('que hice', best_coordinates)
     best_coordinates = np.array(best_coordinates, np.int0)
-    #print('que hicex2', best_coordinates)
-    #print('x2shpae', best_coordinates.shape)
+
     indices, dessorted = zip(*sorted(enumerate(-best_coordinates[:,2]), key=itemgetter(1)))
     #print('indi', indices)
     #print('sorted', dessorted)
@@ -205,7 +213,7 @@ def ANMS(stron_corners, best_num_corners, ori_image, img_gray, imagename):
         #print('indice', k)
         anms_coordinates.append(best_coordinates[k])
 
-    # print('finalmatrix', anms_coordinates)
+
 
     anms_coordinates = np.array(anms_coordinates)
 
@@ -219,11 +227,11 @@ def ANMS(stron_corners, best_num_corners, ori_image, img_gray, imagename):
     #print('best', anms_coordinates)
     return anms_coordinates
 
-def featuredescription(image, patch_size, anmsPos, epsilon, feat_desc):
+def featuredescription(image, patch_size, anmsPos, epsilon, feat_desc, padsize):
     print('Called Feature Description')
     anmsPos = np.array(anmsPos)
     r, c = anmsPos.shape  # Size of the ANMS
-    img_pad = np.pad(image, 100, 'constant',
+    img_pad = np.pad(image, padsize, 'constant',
                      constant_values=0)# add a border around image for patching, zero to add black countering
 
     for i in range(r):
